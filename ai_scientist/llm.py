@@ -1,7 +1,7 @@
 import json
 import os
 import re
-
+import base64
 import anthropic
 import backoff
 import openai
@@ -267,6 +267,76 @@ def get_response_and_scripts_from_llm(
     return content, new_msg_history, script_history
 
 
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
+@backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.APITimeoutError))
+def get_response_with_img_from_llm(
+        msg,
+        image_paths: List[str],
+        client,
+        model,
+        system_message,
+        print_debug=False,
+        msg_history=None,
+        temperature=0.75,
+        speaker_role: str = None,
+        script_history: List[str] = None,
+):
+    if msg_history is None:
+        msg_history = []
+
+    if script_history is None:
+        script_history = []
+
+    if speaker_role is None:
+        speaker_role = ""
+
+    if len(image_paths) == 0:
+        return get_response_and_scripts_from_llm(msg, client, model, system_message, print_debug, msg_history, temperature, speaker_role, script_history)
+
+    base64_images = []
+    for image_path in image_paths:
+        base64_images.append(encode_image(image_path))
+    if model in [
+        "gpt-4o-2024-05-13",
+        "gpt-4o-mini-2024-07-18",
+        "gpt-4o-2024-08-06",
+    ]:
+        new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content":
+                 [{type: "text", "text": system_message}, {type: "image_url", "image_url": base64_image} for base64_image in base64_images
+
+                        ]},
+                *new_msg_history,
+            ],
+            temperature=temperature,
+            max_tokens=MAX_NUM_TOKENS,
+            n=1,
+            stop=None,
+            seed=0,
+        )
+        content = response.choices[0].message.content
+        new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
+    else:
+        raise ValueError(f"Model {model} with img not supported.")
+
+    if print_debug:
+        print()
+        print("*" * 20 + " LLM START " + "*" * 20)
+        for j, msg in enumerate(new_msg_history):
+            print(f'{j}, {msg["role"]}: {msg["content"]}')
+        print(content)
+        print("*" * 21 + " LLM END " + "*" * 21)
+        print()
+    this_script = f"{speaker_role}: {content}"
+    script_history.append(this_script)
+    return content, new_msg_history, script_history
 
 @backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.APITimeoutError))
 def get_response_from_llm(

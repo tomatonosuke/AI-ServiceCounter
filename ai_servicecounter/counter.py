@@ -36,6 +36,7 @@ class Counter(Worker):
         会話履歴と顧客からのメッセージをもとに、以下のフォーマットにて記載された情報を出力してください。
 
         # レスポンスフォーマット(JSON)
+        json
         {
         "desire": [顧客の要望],
         "current_situation": [顧客の現在の状況],
@@ -67,6 +68,7 @@ class Counter(Worker):
         顧客の言語に合わせて回答してください。
 
         # レスポンスフォーマット(JSON)
+        json
         {
         "response": [会話履歴を踏まえた顧客への回答],
         "language": [顧客の言語],
