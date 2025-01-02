@@ -273,7 +273,7 @@ def encode_image(image_path):
 
 
 @backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.APITimeoutError))
-def get_response_with_img_from_llm(
+def get_response_and_scripts_with_img_from_llm(
         msg,
         image_paths: List[str],
         client,

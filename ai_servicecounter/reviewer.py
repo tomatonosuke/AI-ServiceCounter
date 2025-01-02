@@ -1,6 +1,6 @@
 from ai_servicecounter.worker import Worker
 from typing import Dict, List
-from ai_scientist.llm import get_response_with_img_from_llm
+from ai_scientist.llm import get_response_and_scripts_with_img_from_llm
 
 base_prompt = """
 あなたは{job_description[workplace]}で{job_description[job_type]}の承認者をしています。
@@ -28,7 +28,7 @@ class Reviewer(Worker):
         }
         """
 
-        resp, msg_histories, script_histories = get_response_with_img_from_llm(
+        resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg = review_correctness_prompt,
             image_paths = [correct_img_path, review_img_path],
             model=model,

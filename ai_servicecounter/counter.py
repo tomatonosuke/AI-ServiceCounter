@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from ai_scientist.llm import get_response_and_scripts_from_llm, extract_json_between_markers
+from ai_scientist.llm import get_response_and_scripts_from_llm, get_response_and_scripts_with_img_from_llm
 from ai_servicecounter.worker import Worker
 from typing import Dict, List
 
@@ -27,7 +27,7 @@ class Counter(Worker):
         self.speaker_role = "窓口"
         self.base_prompt = base_prompt
 
-    def perform_counter(self, text: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None):
+    def analyze_situation(self, image_paths: List[str], text: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None):
 
 
 
@@ -45,8 +45,9 @@ class Counter(Worker):
         }
         """
 
-        resp, msg_histories, script_histories = get_response_and_scripts_from_llm(
+        resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             base_prompt= check_situation_prompt.format(text=text, msg_history=msg_history, job_description=self.job_description),
+            image_paths=image_paths,
             model=model,
             client=client,
             system_message=system_prompt,
