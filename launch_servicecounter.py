@@ -14,6 +14,7 @@ def parse_arguments():
     parser.add_argument("--task_path", type=str, required=True, help="Path to the task details file")
     parser.add_argument("--model", type=str, required=True, help="Model name")
     parser.add_argument("--gpus", type=int, required=True, help="Number of GPUs")
+    parser.add_argument("--result_path", type=str, required=True, help="Path to the result file")
     return parser.parse_args()
 
 def main(job_description_path: str, task_details_path: str, model: str, gpus: int, client: Any):
@@ -25,9 +26,9 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
     with open(task_details_path, "r") as f:
         job_description = json.load(f)
     with open(task_details_path, "r") as f:
-        task_details = f.read()
+        task_details = json.load(f)
     client, client_model = create_client(model)
-
+    indicators = job_description["reviewer"]["indicators"]
     # actual chat history
     script_history = []
     msg_history = []
@@ -52,20 +53,21 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
         if user_input is not None:
             user_message, image_path = user_input
             # LLMで処理
-            extracted_json, msg_histories, script_histories = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_histories)
+            extracted_json, msg_histories, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
                 if extracted_json["need_help_collegue"] == "broker":
-                    extracted_json, msg_histories, script_histories = broker.identify_task(task_details=task_details, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_histories)
+                    extracted_json, msg_histories, script_history = broker.identify_task(task_details=task_details, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
                     if extracted_json["task_number"].isdigit():
                         task_number = extracted_json["task_number"]
                 elif extracted_json["need_help_collegue"] == "reviewer":
-                    extracted_json, msg_histories, script_histories = reviewer.review_correctness_with_img(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_histories)
+                    extracted_json, msg_histories, script_history = reviewer.review_correctness_with_img(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
 
-            extracted_json, msg_histories, script_histories = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_histories, script_history=script_histories)
+            extracted_json, msg_histories, script_history = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_histories, script_history=script_history)
             # GUIに応答を表示
             app.add_chat("LLM", extracted_json["response"])
 
-            if "終了" in response:
+            extracted_json, msg_histories, script_history = observer.observe_to_continue_interaction(task_details=task_details,text =user_message, client=client, model=model, msg_history=msg_histories, script_history=script_history)
+            if extracted_json["is_need_of_continuation_of_interaction"] == 0:
                 running = False
 
         # ループが速すぎる場合に少し待機 (CPU 負荷軽減)
@@ -74,12 +76,15 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
     # 終了処理
     if app.winfo_exists():
         app.destroy()
-    extracted_json, msg_histories, script_histories = reviewer.review_score(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_histories)
+    extracted_json, msg_histories, script_history = reviewer.review_score(indicators=indicators, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
+    with open(result_path, "w") as f:
+        json.dump(extracted_json, f)
 
 if __name__ == "__main__":
     args = parse_arguments()
     job_description_path = args.job_path
     task_details_path = args.task_path
+    result_path = args.result_path
     model = args.model
     gpus = args.gpus
     main(job_description_path=job_description_path, task_details_path=task_details_path, model=model, gpus=gpus)

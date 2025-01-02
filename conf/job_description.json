@@ -13,5 +13,29 @@
             }
         ]
     },
-    "broker": {}
+    "broker": {},
+    "reviewer": {
+        "indicators": [
+            {
+                "name": "counter_performance",
+                "definition": "A rating from 1 to 4 (low, medium, high, very high)"
+            },
+            {
+                "name": "broker_performance",
+                "definition": "A rating from 1 to 4 (low, medium, high, very high)"
+            },
+            {
+                "name": "reviewer_performance",
+                "definition": "A rating from 1 to 4 (low, medium, high, very high)"
+            },
+            {
+                "name": "observer_performance",
+                "definition": "A rating from 1 to 4 (low, medium, high, very high)"
+            },
+            {
+                "name": "overall_performance",
+                "definition": "A rating from 1 to 4 (low, medium, high, very high)"
+            }
+        ]
+    }
 }

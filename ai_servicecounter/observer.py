@@ -43,4 +43,3 @@ class Observer(Worker):
         )
         extracted_json = self._extract_json(resp)
         return extracted_json, msg_histories, script_histories
-

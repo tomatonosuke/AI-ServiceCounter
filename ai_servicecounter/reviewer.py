@@ -44,8 +44,8 @@ class Reviewer(Worker):
             script_history=script_history,
         )
         return resp, msg_histories, script_histories
-    def review_score(self, indicator:Dict[str, str], model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None) -> Dict[str, str]:
-        indicator_str = "\n".join([f"{key}: {value}" for key, value in indicator.items()])
+    def review_score(self, indicators:Dict[str, str], model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None) -> Dict[str, str]:
+        indicator_str = "\n".join([f"{key}: {value}" for key, value in indicators.items()])
         review_score_prompt = self.base_prompt + """
         {job_type}におけるやり取りを、評価指標欄に記載された指標に従って評価してください。
         以下のフォーマットに従って、以下の会話履歴の判断を評価してください。
