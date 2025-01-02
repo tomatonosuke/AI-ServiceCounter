@@ -1,0 +1,26 @@
+{
+    "tasks": [
+        {
+            "task_number": 1,
+            "task_name": "転入届処理",
+            "task_content": "ユーザーに転入届の提供・記入指導・受付を行ってください。",
+            "task_status": [
+                "review",
+                "start",
+                "accepted"
+            ],
+            "correct_img_path": "conf/correct_img/1.png"
+        },
+        {
+            "task_number": 2,
+            "task_name": "転入届処理",
+            "task_content": "ユーザーに転入届の提供・記入指導・受付を行ってください。",
+            "task_status": [
+                "review",
+                "start",
+                "accepted"
+            ],
+            "correct_img_path": "conf/correct_img/2.png"
+        }
+    ]
+}

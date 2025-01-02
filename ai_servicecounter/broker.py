@@ -4,7 +4,7 @@ from typing import Dict, List
 from ai_servicecounter.worker import Worker
 
 base_prompt = """
-あなたは{job_description[workplace]}で{job_type}から伝えられる文脈情報から、
+あなたは{workplace}で{job_type}から伝えられる文脈情報から、
 顧客の要望が業務リスト上に記載のあるどのタスクに該当し、どのステータスであるかを判断してください。
 該当するタスクがない場合は、task_nameに"なし"と記載してください。
 判断された情報は、レスポンスフォーマットに従って出力してください。
@@ -64,7 +64,7 @@ class Broker(Worker):
 
 
         resp, msg_histories, script_histories = get_response_and_scripts_from_llm(
-            base_prompt=self.base_prompt.format(text=text,job_type=job_type, msg_history=msg_history, job_description=self.job_description, str_task_details=str_task_details),
+            base_prompt=self.base_prompt.format(text=text,job_type=self.job_description["job_type"], msg_history=msg_history, workplace=self.job_description["workplace"], str_task_details=str_task_details),
             model=model,
             client=client,
             system_message=system_prompt,

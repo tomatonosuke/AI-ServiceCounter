@@ -6,7 +6,9 @@ from ai_servicecounter.worker import Worker
 from typing import Dict, List
 
 base_prompt = """
-あなたは{job_description[workplace]}で{job_description[job_type]}の窓口対応をしています。
+あなたは{workplace}で{job_type}の窓口対応をしています。
+以下に同僚名と同僚が実施できるタスクを記載します。
+{collegues}
 礼儀正しい対応を心がけてください。
 以下に、これまでの会話履歴と、顧客からのメッセージを記載します。
 
@@ -24,29 +26,29 @@ class Counter(Worker):
         self.max_attempts = max_attempts
         self.current_attempt = 0
         self.job_description = job_description
-        self.speaker_role = "窓口"
+        self.speaker_role = "counter"
         self.base_prompt = base_prompt
 
     def analyze_situation(self, image_paths: List[str], text: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None):
 
 
-
-
         check_situation_prompt = self.base_prompt + """
         会話履歴と顧客からのメッセージをもとに、以下のフォーマットにて記載された情報を出力してください。
-
+        また、後続タスクを頼む同僚の名前をneed_help_collegueに出力してください。不要な場合は空文字列にしてください。
         # レスポンスフォーマット(JSON)
         json
         {
         "desire": [顧客の要望],
         "current_situation": [顧客の現在の状況],
         "language": [顧客の言語],
-        "own_thought": [顧客の要望を踏まえた自分の考え]
+        "own_thought": [顧客の要望を踏まえた自分の考え],
+        "need_help_collegue": [後続タスクを実施する同僚名]
+
         }
         """
 
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
-            base_prompt= check_situation_prompt.format(text=text, msg_history=msg_history, job_description=self.job_description),
+            base_prompt= check_situation_prompt.format(text=text, msg_history=msg_history, collegues=self.job_description["counter"]["collegues"],workplace=self.job_description["workplace"],job_type=self.job_description["job_type"]),
             image_paths=image_paths,
             model=model,
             client=client,
@@ -77,7 +79,7 @@ class Counter(Worker):
         }
         """
         try:
-            resp, msg_histories, script_histories = get_response_and_scripts_from_llm(
+            resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
                 base_prompt= get_response_prompt.format(text=text, msg_history=msg_history, job_description=self.job_description),
                 model=model,
                 client=client,

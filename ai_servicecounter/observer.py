@@ -3,9 +3,15 @@ from ai_scientist.llm import get_response_and_scripts_from_llm
 from typing import Dict, List
 from ai_servicecounter.worker import Worker
 base_prompt = """
-あなたは{job_description[workplace]}に勤務する{job_type}の監督者です。
+あなたは{workplace}に勤務する{job_type}の監督者です。
 会話履歴から、既に顧客の要件が満たされた、もしくはさらに会話を継続することで顧客の要件が満たされる可能性があるか判断してください。
 判断された情報は、レスポンスフォーマットに従って出力してください。
+
+# 会話履歴
+{msg_history}
+
+# タスク詳細
+{task_details}
 
 # レスポンスフォーマット(JSON)
 json
@@ -19,28 +25,12 @@ json
 class Observer(Worker):
     def __init__(self, base_prompt: str, job_description: Dict[str, str]):
         self.job_description = job_description
-        self.speaker_role = "オブザーバー"
+        self.speaker_role = "observer"
         self.base_prompt = base_prompt
-    def observe_to_continue_interaction(self, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None) -> Dict[str, str]:
-        """
-        Observes and analyzes the interaction between customer and service counter.
-
-        Args:
-            model: LLM model
-            client: LLM client
-            msg_history: Conversation history
-            return_msg_history: Whether to return conversation history
-            system_prompt: System prompt
-            script_history: List of previous script outputs
-
-
-        """
-        str_task_details = "\n".join([f"{k}: {v}" for k, v in self.task_details.items()])
-
-
+    def observe_to_continue_interaction(self, task_details: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None) -> Dict[str, str]:
 
         resp, msg_histories, script_histories = get_response_and_scripts_from_llm(
-            base_prompt=self.base_prompt.format(job_description=self.job_description),
+            base_prompt=self.base_prompt.format(workplace=self.job_description["workplace"],job_type=self.job_description["job_type"],task_details=task_details, msg_history=msg_history),
             model=model,
             client=client,
             system_message=system_prompt,

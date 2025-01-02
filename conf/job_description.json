@@ -1,0 +1,17 @@
+{
+    "workplace": "役所",
+    "job_type": "書類申請",
+    "counter": {
+        "collegues": [
+            {
+                "name": "reviewer",
+                "task": "申請された書類の訂正・受理"
+            },
+            {
+                "name": "broker",
+                "task": "訂正・受理できる書類についての詳細"
+            }
+        ]
+    },
+    "broker": {}
+}
