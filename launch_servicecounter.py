@@ -45,7 +45,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
     all_task_number = [task["task_number"] for task in task_details["tasks"]]
     correct_img_path_format = "conf/correct_img/{task_number}.png"
     counter = Counter(job_description=job_description)
-    observer = Observer(job_description=job_description)
+    observer = Observer(job_description=job_description, task_details=task_details)
     reviewer = Reviewer(job_description=job_description)
     broker = Broker(job_description=job_description, task_details=task_details)
     running = True
@@ -59,7 +59,8 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
         # If user input is available, send it to LLM
         if app.user_input_flag:
             user_message = app.user_message
-            image_path = app.user_image_path
+
+            image_path = [] if app.user_image_path is None else app.user_image_path
             # analyze situation
             extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
