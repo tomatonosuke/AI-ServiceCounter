@@ -1,7 +1,7 @@
 import argparse
 import time
 import datetime
-
+import os
 from ai_servicecounter.gui_counter import ChatGUI
 from ai_servicecounter.broker import Broker
 from ai_servicecounter.counter import Counter
@@ -23,11 +23,11 @@ def parse_arguments():
     parser.add_argument("--task_path", type=str, required=True, help="Path to the task details file")
     parser.add_argument("--model", type=str, required=True, help="Model name")
     parser.add_argument("--result_path", type=str, required=True, help="Path to the result file")
-
+    parser.add_argument("--script_history_dir", type=str, required=True, help="Path to the script history file")
     return parser.parse_args()
 
 
-def main(job_description_path: str, task_details_path: str, model: str, result_path: str):
+def main(job_description_path: str, task_details_path: str, model: str, result_path: str, script_history_dir: str):
 
     # GUI
     app = ChatGUI()
@@ -76,8 +76,12 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                 elif extracted_json["need_help_collegue"] == "reviewer":
                     if task_number is not None:
                         correct_img_path = correct_img_path_format.format(task_number=task_number)
-                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(text =extracted_json, client=client, model=model, image_paths=image_path + [correct_img_path], msg_history=msg_history, script_history=script_history)
+                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img( client=client, model=model, image_paths=image_path + [correct_img_path], msg_history=msg_history, script_history=script_history)
                     else:
+                        correct_img_paths = [correct_img_path_format.format(task_number=task_number) for task_number in all_task_number]
+                        task_list = [f"タスク{task_number}: {task_details['tasks'][task_number]['task_content']}" for task_number in all_task_number]
+                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(task_list=task_list, client=client, model=model, image_paths=image_path + correct_img_paths, msg_history=msg_history, script_history=script_history)
+
                         add_invalid_value_log_to_script(speaker_role="counter", attribute_name="task_number", script_history=script_history)
                 else:
                     add_invalid_value_log_to_script(speaker_role="counter", attribute_name="need_help_collegue", script_history=script_history)
@@ -123,7 +127,11 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
 
     # !TODO: Add exclusive control
     with open(result_data, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(result_data, f, ensure_ascii=False, indent=4)
+
+    with open(os.path.join(script_history_dir,current_timestamp, "_script_history.json")  , "w", encoding="utf-8") as f:
+        json.dump(script_history, f, ensure_ascii=False, indent=4)
+
 
 
 if __name__ == "__main__":
@@ -131,5 +139,6 @@ if __name__ == "__main__":
     job_description_path = args.job_path
     task_details_path = args.task_path
     result_path = args.result_path
+    script_history_dir = args.script_history_dir
     model = args.model
-    main(job_description_path=job_description_path, task_details_path=task_details_path, model=model, result_path=result_path)
+    main(script_history_dir=script_history_dir, job_description_path=job_description_path, task_details_path=task_details_path, model=model, result_path=result_path)

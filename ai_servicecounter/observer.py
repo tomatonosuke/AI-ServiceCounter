@@ -28,13 +28,13 @@ class Observer(Worker):
         {str_script_history}
 
         # レスポンスフォーマット(JSON)
-        json
+        ```json
         {{
         "is_need_of_continuation_of_interaction": 0 or 1 (0:会話継続が不要, 1:会話継続が必要),
         "reason": 判断した理由,
         "own_thought": 判断した理由を踏まえた自分の考え
         }}
-
+        ```
         """
         resp, msg_histories, script_history = get_response_and_scripts_from_llm(
             msg=observe_prompt.format(str_script_history=str_script_history, str_task_details=str_task_details),

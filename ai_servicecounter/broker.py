@@ -14,7 +14,7 @@ base_prompt = """
 {str_task_details}
 
 # レスポンスフォーマット(JSON)
-json
+```json
 {{
 "task_name": 判断されたタスクのタイプ,
 "requirements": 判断されたタスクの要件,
@@ -22,7 +22,7 @@ json
 "next_action": 判断されたタスクの次のアクション,
 "own_thought": 判断した理由を踏まえた自分の考え
 }}
-
+```
 """
 
 

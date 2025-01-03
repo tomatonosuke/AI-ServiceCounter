@@ -195,7 +195,7 @@ def get_response_and_scripts_from_llm(
             model=model,
             messages=[
                 {"role": "system", "content": system_message},
-                *new_msg_history,
+                {"role": "user", "content": msg},
             ],
             temperature=temperature,
             max_tokens=MAX_NUM_TOKENS,
@@ -306,20 +306,19 @@ def get_response_and_scripts_with_img_from_llm(
         "gpt-4o-2024-08-06",
     ]:
         new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        costructed_msg = [
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": [
+                {"type": "text", "text": msg},
+                ] + [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}} for base64_image in base64_images]
+            },
+        ]
         response = client.chat.completions.create(
             model=model,
-            messages=[
-                {"role": "system", "content":
-                 [{type: "text", "text": system_message} +
-                 {type: "image_url", "image_url": base64_image} for base64_image in base64_images
-
-                        ]},
-                *new_msg_history,
-            ],
+            messages=costructed_msg,
             temperature=temperature,
             max_tokens=MAX_NUM_TOKENS,
             n=1,
-            stop=None,
             seed=0,
         )
         content = response.choices[0].message.content

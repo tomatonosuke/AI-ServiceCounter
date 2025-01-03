@@ -12,26 +12,28 @@ class Reviewer(Worker):
         self.system_message = base_prompt.format(workplace=self.job_description["workplace"],job_type=self.job_description["job_type"])
         self.speaker_role = "reviewer"
 
-    def review_correctness_with_img(self, correct_img_path: str, review_img_path: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
+    def review_correctness_with_img(self, correct_img_paths: List[str], review_img_path: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None, task_list: List[str] =None) -> Dict[str, str]:
         review_correctness_prompt = """
-        最初の画像が正解データで、2つ目の画像が提出されたデータです。
+        最初の画像が提出されたデータで、2つ目の画像が正解データです。
+        画像データが3つ以上の場合、前のプロセスに間違いがあるため、否認しその旨を記載してください。
         2つの画像データを比較し、提出されたデータの正確性を判断してください。
         画像が1つしかない場合は、前のプロセスに間違いがあるため、必ず否認してください。
         以下レスポンスフォーマットに従って出力してください。
 
         # レスポンスフォーマット(JSON)
-        json
+        ```json
         {{
         "is_approved": 0 or 1 (0:否認, 1:承認),
         "reason": 判断した理由,
         "need_correction": 修正すべき箇所,
         "correctness_score": 0-100
         }}
+        ```
         """
 
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg = review_correctness_prompt,
-            image_paths = [correct_img_path, review_img_path],
+            image_paths = [review_img_path] + correct_img_paths,
             model=model,
             client=client,
             system_message=self.system_message,
@@ -56,7 +58,7 @@ class Reviewer(Worker):
         {indicator_str}
 
         # レスポンスフォーマット(JSON)
-        json
+        ```json
         {{
         "indicator_name":
             {{
@@ -69,6 +71,7 @@ class Reviewer(Worker):
             "total_score": depend on the definition,
             "total_reason": 判断した理由を踏まえた自分の考え
         }}
+        ```
         """
         resp, msg_histories, script_histories = get_response_and_scripts_from_llm(
             msg = review_score_prompt.format(job_type=self.job_description["job_type"], str_script_history=str_script_history, workplace=self.job_description["workplace"], indicator_str=indicator_str),
