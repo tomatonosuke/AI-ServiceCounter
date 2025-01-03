@@ -22,7 +22,7 @@ base_prompt = """
 
 
 class Counter(Worker):
-    def __init__(self, base_prompt: str, job_description: Dict[str, str], max_attempts: int = 10):
+    def __init__(self, job_description: Dict[str, str], max_attempts: int = 10, base_prompt: str = base_prompt):
         self.max_attempts = max_attempts
         self.current_attempt = 0
         self.job_description = job_description

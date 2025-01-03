@@ -23,7 +23,7 @@ json
 
 """
 class Observer(Worker):
-    def __init__(self, base_prompt: str, job_description: Dict[str, str]):
+    def __init__(self, job_description: Dict[str, str], base_prompt: str = base_prompt):
         self.job_description = job_description
         self.speaker_role = "observer"
         self.base_prompt = base_prompt

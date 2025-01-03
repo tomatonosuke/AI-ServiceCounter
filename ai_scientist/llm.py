@@ -310,7 +310,8 @@ def get_response_and_scripts_with_img_from_llm(
             model=model,
             messages=[
                 {"role": "system", "content":
-                 [{type: "text", "text": system_message}, {type: "image_url", "image_url": base64_image} for base64_image in base64_images
+                 [{type: "text", "text": system_message} +
+                 {type: "image_url", "image_url": base64_image} for base64_image in base64_images
 
                         ]},
                 *new_msg_history,

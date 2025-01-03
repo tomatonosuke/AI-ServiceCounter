@@ -10,16 +10,12 @@ class ChatGUI(tk.Tk):
     「メッセージ送信」時のコールバックをメインスクリプトから受け取り、
     結果を表示する。
     """
-    def __init__(self, on_send_message_callback):
-        """
-        :param on_send_message_callback: ユーザーの入力をメインルーチンへ渡すコールバック関数
-               シグネチャは (message: str, image_path: str|None) -> str の想定
-        """
+    def __init__(self):
+
         super().__init__()
         self.title("Chat GUI")
         self.geometry("600x500")
 
-        self.on_send_message_callback = on_send_message_callback
 
         # チャット表示部
         self.chat_display = scrolledtext.ScrolledText(self, wrap=tk.WORD, state='disabled')
@@ -62,12 +58,6 @@ class ChatGUI(tk.Tk):
 
         # ユーザー投稿内容をチャットエリアに表示
         self.add_chat("User", user_message)
-
-        # メインスクリプトのコールバックを呼び出して LLM 応答を取得
-        response_text = self.on_send_message_callback(user_message, self.selected_image_path)
-
-        # LLMの応答をチャットエリアに表示
-        self.add_chat("LLM", response_text)
 
         # 入力欄と選択画像をリセット
         self.entry_message.delete(0, tk.END)

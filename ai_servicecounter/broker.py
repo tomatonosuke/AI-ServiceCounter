@@ -37,7 +37,7 @@ json
 
 
 class Broker(Worker):
-    def __init__(self, base_prompt: str, job_description: Dict[str, str], task_details: Dict[str, str]):
+    def __init__(self, job_description: Dict[str, str], task_details: Dict[str, str], base_prompt: str = base_prompt):
         self.job_description = job_description
         self.task_details = task_details
         self.speaker_role = "ブローカー"

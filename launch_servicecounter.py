@@ -26,15 +26,15 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def main(job_description_path: str, task_details_path: str, model: str, gpus: int, client: Any):
+def main(job_description_path: str, task_details_path: str, model: str, result_path: str):
 
     # GUI
     app = ChatGUI()
     task_number = None
     job_description = None
-    with open(job_description_path, "r") as f:
+    with open(job_description_path, "r", encoding="utf-8") as f:
         job_description = json.load(f)
-    with open(task_details_path, "r") as f:
+    with open(task_details_path, "r", encoding="utf-8"  ) as f:
         task_details = json.load(f)
     client, client_model = create_client(model)
     indicators = job_description["reviewer"]["indicators"]
@@ -43,10 +43,10 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
     msg_history = []
     all_task_number = [task["task_number"] for task in task_details["tasks"]]
     correct_img_path_format = "conf/correct_img/{task_number}.png"
-    counter = Counter(job_description=job_description, task_details=task_details)
-    observer = Observer(job_description=job_description, task_details=task_details)
-    reviewer = Reviewer(job_description=job_description, task_details=task_details)
-    broker = Broker(counter=counter, observer=observer, reviewer=reviewer)
+    counter = Counter(job_description=job_description)
+    observer = Observer(job_description=job_description)
+    reviewer = Reviewer(job_description=job_description)
+    broker = Broker(job_description=job_description, task_details=task_details)
     running = True
     while running:
         app.update_idletasks()
@@ -55,7 +55,6 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
         # Avoid errors when GUI is closed (e.g., window X button)
         if not app.winfo_exists():
             break
-        counter = Counter()
         # If user input is available, send it to LLM
         user_input = app.get_user_input()
         if user_input is not None:
@@ -82,7 +81,7 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
 
             extracted_json, msg_history, script_history = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
             # Display response in GUI
-            app.add_chat("LLM", extracted_json["response"])
+            app.add_chat("Counter", extracted_json["response"])
 
             extracted_json, msg_history, script_history = observer.observe_to_continue_interaction(task_details=task_details,text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
             try:
@@ -125,4 +124,4 @@ if __name__ == "__main__":
     task_details_path = args.task_path
     result_path = args.result_path
     model = args.model
-    main(job_description_path=job_description_path, task_details_path=task_details_path, model=model, gpus=gpus)
+    main(job_description_path=job_description_path, task_details_path=task_details_path, model=model, result_path=result_path)
