@@ -43,6 +43,7 @@ graph TD
 ```
 
 ## 使い方
+現バージョンでは、OpenAI APIのみ利用可能。
 窓口業務の定義は、`conf/job_description.json`と`conf/task_details.json`で行う。
 
 まずは、`conf/job_description.json`を編集して、サービスの内容を定義する。
