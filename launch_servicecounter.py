@@ -26,6 +26,7 @@ def parse_arguments():
 
     return parser.parse_args()
 
+
 def main(job_description_path: str, task_details_path: str, model: str, result_path: str):
 
     # GUI
@@ -56,9 +57,9 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
         if not app.winfo_exists():
             break
         # If user input is available, send it to LLM
-        user_input = app.get_user_input()
-        if user_input is not None:
-            user_message, image_path = user_input
+        if app.user_input_flag:
+            user_message = app.user_message
+            image_path = app.user_image_path
             # analyze situation
             extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
@@ -79,6 +80,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                 else:
                     add_invalid_value_log_to_script(speaker_role="counter", attribute_name="need_help_collegue", script_history=script_history)
 
+            # Counter's message to user
             extracted_json, msg_history, script_history = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
             # Display response in GUI
             app.add_chat("Counter", extracted_json["response"])
@@ -91,7 +93,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
 
             except:
                 add_invalid_value_log_to_script(speaker_role="observer", attribute_name="is_need_of_continuation_of_interaction", script_history=script_history)
-
+            app.set_input_in_progress(False)
         # Avoid errors when GUI is closed (e.g., window X button)
         time.sleep(0.01)
 
