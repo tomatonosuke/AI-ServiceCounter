@@ -16,11 +16,11 @@ base_prompt = """
 # レスポンスフォーマット(JSON)
 json
 {{
-"task_name": [判断されたタスクのタイプ],
-"requirements": [判断されたタスクの要件],
-"status": [判断されたタスクのステータス],
-"next_action": [判断されたタスクの次のアクション]
-"own_thought": [判断した理由を踏まえた自分の考え]
+"task_name": 判断されたタスクのタイプ,
+"requirements": 判断されたタスクの要件,
+"status": 判断されたタスクのステータス,
+"next_action": 判断されたタスクの次のアクション,
+"own_thought": 判断した理由を踏まえた自分の考え
 }}
 
 """
@@ -43,9 +43,9 @@ class Broker(Worker):
 
         # 文脈情報のフォーマット
         {{
-        "desire": [顧客の要望],
-        "current_situation": [顧客の現在の状況]
-        "language": [顧客の言語]
+        "desire": 顧客の要望,
+        "current_situation": 顧客の現在の状況,
+        "language": 顧客の言語
         }}
         """
 

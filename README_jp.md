@@ -133,5 +133,5 @@ export OPENAI_API_KEY=your_api_key
 
 ### 実行方法
 ```
-python launch_servicecounter.py --job_path "conf/job_description.json" --task_path "conf/task_details.json" --model "gpt-4o-mini" --result_path "performance_result/result.json"
+python launch_servicecounter.py --job_path "conf/job_description.json" --task_path "conf/task_details.json" --model "gpt-4o-2024-08-06" --result_path "performance_result/result.json"
 ```

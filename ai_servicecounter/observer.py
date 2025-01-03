@@ -14,7 +14,7 @@ class Observer(Worker):
 
         self.system_message = base_prompt.format(workplace=self.job_description["workplace"],job_type=self.job_description["job_type"])
 
-    def observe_to_continue_interaction(self, str, model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
+    def observe_to_continue_interaction(self, model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
         str_script_history = '\n'.join(script_history)
         str_task_details = "\n".join([f"{k}: {v}" for k, v in self.task_details.items()])
         observe_prompt = """
@@ -31,8 +31,8 @@ class Observer(Worker):
         json
         {{
         "is_need_of_continuation_of_interaction": 0 or 1 (0:会話継続が不要, 1:会話継続が必要),
-        "reason": [判断した理由],
-        "own_thought": [判断した理由を踏まえた自分の考え]
+        "reason": 判断した理由,
+        "own_thought": 判断した理由を踏まえた自分の考え
         }}
 
         """

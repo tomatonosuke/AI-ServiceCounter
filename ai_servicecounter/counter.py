@@ -39,14 +39,13 @@ class Counter(Worker):
         # レスポンスフォーマット(JSON)
         json
         {{
-        "desire": [顧客の要望],
-        "current_situation": [顧客の現在の状況],
-        "language": [顧客の言語],
-        "own_thought": [顧客の要望を踏まえた自分の考え],
-        "need_help_collegue": [後続タスクを実施する同僚名]
+        "desire": 顧客の要望,
+        "current_situation": 顧客の現在の状況,
+        "language": 顧客の言語,
+        "own_thought": 顧客の要望を踏まえた自分の考え,
+        "need_help_collegue": 後続タスクを実施する同僚名
         }}
         """
-        print(image_paths)
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg= check_situation_prompt.format(text=text, str_script_history=str_script_history),
             image_paths=image_paths,
@@ -64,22 +63,23 @@ class Counter(Worker):
 
     def respond_with_context(self, text: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None):
 
-        get_response_prompt = self.base_prompt + """
+        get_response_prompt = """
         会話履歴と顧客からのメッセージをもとに、以下のフォーマットにて記載された情報を出力してください。
         顧客の言語に合わせて回答してください。
 
         # レスポンスフォーマット(JSON)
         json
         {{
-        "response": [会話履歴を踏まえた顧客への回答],
-        "language": [顧客の言語],
-        "own_thought": [顧客の要望を踏まえた自分の考え]
+        "response": 会話履歴を踏まえた顧客への回答,
+        "language": 顧客の言語,
+        "own_thought": 顧客の要望を踏まえた自分の考え
         }}
         """
         try:
             resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
                 msg= get_response_prompt,
                 model=model,
+                image_paths=[],
                 client=client,
                 print_debug=False,
                 msg_history=msg_history,

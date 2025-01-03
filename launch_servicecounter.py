@@ -49,6 +49,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
     reviewer = Reviewer(job_description=job_description)
     broker = Broker(job_description=job_description, task_details=task_details)
     running = True
+    step = 0
     while running:
         app.update_idletasks()
         app.update()
@@ -60,12 +61,12 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
         if app.user_input_flag:
             user_message = app.user_message
 
-            image_path = [] if app.user_image_path is None else app.user_image_path
+            image_path = [] if app.user_image_path is None else [app.user_image_path]
             # analyze situation
-            extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
+            extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=image_path, msg_history=msg_history, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
                 if extracted_json["need_help_collegue"] == "broker":
-                    extracted_json, msg_history, script_history = broker.identify_task(task_details=task_details, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
+                    extracted_json, msg_history, script_history = broker.identify_task(task_details=task_details, text =extracted_json, client=client, model=model, image_paths=image_path, msg_history=msg_history, script_history=script_history)
                     if extracted_json["task_number"].isdigit():
                         if int(extracted_json["task_number"]) in all_task_number:
                             task_number = extracted_json["task_number"]
@@ -75,7 +76,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                 elif extracted_json["need_help_collegue"] == "reviewer":
                     if task_number is not None:
                         correct_img_path = correct_img_path_format.format(task_number=task_number)
-                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(text =user_message, client=client, model=model, image_paths=[image_path, correct_img_path], msg_history=msg_history, script_history=script_history)
+                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(text =extracted_json, client=client, model=model, image_paths=image_path + [correct_img_path], msg_history=msg_history, script_history=script_history)
                     else:
                         add_invalid_value_log_to_script(speaker_role="counter", attribute_name="task_number", script_history=script_history)
                 else:
@@ -83,10 +84,11 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
 
             # Counter's message to user
             extracted_json, msg_history, script_history = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
+            print(extracted_json)
             # Display response in GUI
             app.add_chat("Counter", extracted_json["response"])
 
-            extracted_json, msg_history, script_history = observer.observe_to_continue_interaction(task_details=task_details,text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
+            extracted_json, msg_history, script_history = observer.observe_to_continue_interaction(client=client, model=model, msg_history=msg_history, script_history=script_history)
             try:
                 is_need_of_continuation_of_interaction = int(extracted_json["is_need_of_continuation_of_interaction"])
                 if is_need_of_continuation_of_interaction == 0:
@@ -95,6 +97,9 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
             except:
                 add_invalid_value_log_to_script(speaker_role="observer", attribute_name="is_need_of_continuation_of_interaction", script_history=script_history)
             app.set_input_in_progress(False)
+
+            print(f"step: {step}, msg_history: {msg_history}, script_history: {script_history}")
+            step += 1
         # Avoid errors when GUI is closed (e.g., window X button)
         time.sleep(0.01)
 
@@ -103,7 +108,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
         app.destroy()
 
     # generate result indicator
-    extracted_json, msg_history, script_history = reviewer.review_score(indicators=indicators, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
+    extracted_json, msg_history, script_history = reviewer.review_score(indicators=indicators,  client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
     extracted_json["timestamp"] = current_timestamp
     with open(result_path, "w") as f:
         json.dump(extracted_json, f)

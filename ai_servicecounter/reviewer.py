@@ -1,6 +1,6 @@
 from ai_servicecounter.worker import Worker
 from typing import Dict, List
-from ai_scientist.llm import get_response_and_scripts_with_img_from_llm
+from ai_scientist.llm import get_response_and_scripts_with_img_from_llm, get_response_and_scripts_from_llm
 
 base_prompt = """
 あなたは{workplace}で{job_type}の評価者をしています。
@@ -23,14 +23,14 @@ class Reviewer(Worker):
         json
         {{
         "is_approved": 0 or 1 (0:否認, 1:承認),
-        "reason": [判断した理由],
-        "need_correction": [修正すべき箇所]
+        "reason": 判断した理由,
+        "need_correction": 修正すべき箇所,
         "correctness_score": 0-100
         }}
         """
 
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
-            msg = review_correctness_prompt.format,
+            msg = review_correctness_prompt,
             image_paths = [correct_img_path, review_img_path],
             model=model,
             client=client,
@@ -60,17 +60,17 @@ class Reviewer(Worker):
         {{
         "indicator_name":
             {{
-            "score": [depend on the definition],
-            "reason": [判断した理由],
-            "need_correction": [修正すべき箇所]
+            "score": depend on the definition,
+            "reason": 判断した理由,
+            "need_correction": 修正すべき箇所
             }},
             ...
             ,
-            "total_score": [depend on the definition],
-            "total_reason": [判断した理由を踏まえた自分の考え]
+            "total_score": depend on the definition,
+            "total_reason": 判断した理由を踏まえた自分の考え
         }}
         """
-        resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
+        resp, msg_histories, script_histories = get_response_and_scripts_from_llm(
             msg = review_score_prompt.format(job_type=self.job_description["job_type"], str_script_history=str_script_history, workplace=self.job_description["workplace"], indicator_str=indicator_str),
             model=model,
             client=client,
