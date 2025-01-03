@@ -190,17 +190,17 @@ def get_response_and_scripts_from_llm(
         "gpt-4o-mini-2024-07-18",
         "gpt-4o-2024-08-06",
     ]:
+
         new_msg_history = msg_history + [{"role": "user", "content": msg}]
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": msg},
+                {"role": "system", "content":[{"type": "text", "text": system_message}]},
+                {"role": "user", "content": [{"type": "text", "text": msg}]},
             ],
             temperature=temperature,
             max_tokens=MAX_NUM_TOKENS,
             n=1,
-            stop=None,
             seed=0,
         )
         content = response.choices[0].message.content
@@ -295,7 +295,7 @@ def get_response_and_scripts_with_img_from_llm(
         speaker_role = ""
 
     if len(image_paths) == 0:
-        return get_response_and_scripts_from_llm(msg, client, model, system_message, print_debug, msg_history, temperature, speaker_role, script_history)
+        return get_response_and_scripts_from_llm(msg=msg, client=client, model=model, system_message=system_message, print_debug=print_debug, msg_history=msg_history, temperature=temperature, speaker_role=speaker_role, script_history=script_history)
 
     base64_images = []
     for image_path in image_paths:

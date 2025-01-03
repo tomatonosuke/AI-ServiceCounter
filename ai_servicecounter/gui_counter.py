@@ -1,6 +1,7 @@
 # gui_app.py
 
 import tkinter as tk
+import tkinter.ttk as ttk
 from tkinter import filedialog, scrolledtext
 import os
 from PIL import Image, ImageTk
@@ -14,32 +15,99 @@ class ChatGUI(tk.Tk):
 
         super().__init__()
         self.title("Chat GUI")
-        self.geometry("600x500")
+        self.geometry("700x500")
 
 
-        # チャット表示部
-        self.chat_display = scrolledtext.ScrolledText(self, wrap=tk.WORD, state='disabled')
-        self.chat_display.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        # ---------- スタイル設定 ----------
+        self.style = ttk.Style()
+        # システムにあるテーマを指定 (clam, default, alt, etc.)
+        self.style.theme_use("clam")
 
-        # 下部フレーム
-        bottom_frame = tk.Frame(self)
-        bottom_frame.pack(fill=tk.X, padx=5, pady=5)
+        # 背景色やボタンなどのスタイルを設定
+        background_color = "#fafafa"
+        accent_color = "#1a73e8"
+        text_color = "#333333"
+        font_family = "Helvetica"   # 好みのフォントに変更可 (例: "Century Gothic", "Arial")
 
-        self.entry_message = tk.Entry(bottom_frame)
+        # フレームの背景色
+        self.style.configure("TFrame", background=background_color)
+
+        # ラベルのデザイン
+        self.style.configure(
+            "TLabel",
+            background=background_color,
+            foreground=text_color,
+            font=(font_family, 11)
+        )
+
+        # ボタンのデザイン
+        self.style.configure(
+            "TButton",
+            background=accent_color,
+            foreground="#ffffff",
+            font=(font_family, 10, "bold"),
+            padding=6
+        )
+        # Windowsなどで background が反映されない場合は、以下のオプションを適宜調整要
+        # self.style.map("TButton", background=[("active", "#1669c1")])
+
+        # エントリーのデザイン
+        self.style.configure(
+            "TEntry",
+            font=(font_family, 11),
+            padding=5
+        )
+
+        # ウィンドウ全体の背景色を設定
+        self.configure(bg=background_color)
+
+        # ---------- 上部：チャット表示部 ----------
+        # tk の ScrolledText にフォントなどを直接設定する
+        self.chat_display = scrolledtext.ScrolledText(
+            self,
+            wrap=tk.WORD,
+            font=(font_family, 11),
+            bg="#ffffff",       # 背景は白
+            fg=text_color,      # 文字色
+            relief=tk.FLAT,     # 枠線をフラットに
+            borderwidth=0,
+            highlightthickness=1,
+            highlightbackground="#e0e0e0"  # 薄いグレーで枠を付ける
+        )
+        self.chat_display.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.chat_display.config(state="disabled")
+
+        # ---------- 下部：メッセージ入力＆プレビュー ----------
+        # フレームでまとめる
+        bottom_frame = ttk.Frame(self, style="TFrame")
+        bottom_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        # 入力欄 (ttk.Entry)
+        self.entry_message = ttk.Entry(bottom_frame, style="TEntry")
         self.entry_message.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.entry_message.bind("<Return>", self.on_enter_key)
 
-        # 画像添付ボタン
-        self.button_attach = tk.Button(bottom_frame, text="画像を添付", command=self.select_image)
+        # 画像選択ボタン
+        self.button_attach = ttk.Button(bottom_frame, text="attach image", command=self.select_image, state=tk.DISABLED)
         self.button_attach.pack(side=tk.LEFT, padx=5)
 
         # 送信ボタン
-        self.button_send = tk.Button(bottom_frame, text="送信", command=self.send_message)
-        self.button_send.pack(side=tk.LEFT)
+        self.button_send = ttk.Button(bottom_frame, text="send", command=self.send_message)
+        self.button_send.pack(side=tk.LEFT, padx=5)
 
-        # 画像パスの一時保存
-        self.selected_image_path = None
-        # Enterキーで送信ボタンを押す
-        self.entry_message.bind("<Return>", self.on_enter_key)
+        # プレビュー用フレーム
+        preview_frame = ttk.Frame(self, style="TFrame")
+        preview_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        # サムネイル表示ラベル
+        self.label_image_preview = ttk.Label(preview_frame, text="", style="TLabel")
+        self.label_image_preview.pack(side=tk.LEFT, padx=5)
+
+        # 画像選択を取り消すボタン
+        self.button_cancel_selection = ttk.Button(preview_frame, text="cancel", command=self.cancel_selection)
+        self.button_cancel_selection.pack(side=tk.LEFT, padx=5)
+        self.button_cancel_selection.config(state=tk.DISABLED)
+
 
         # --- フラグ＆データ ---
         # ユーザー入力中フラグ (Trueなら送信完了待ちでボタン押下不可)
@@ -47,6 +115,9 @@ class ChatGUI(tk.Tk):
         # ユーザーの入力データを保持
         self.user_message = None
         self.user_image_path = None
+
+        self.selected_image_path = None
+        self.selected_image_thumbnail = None
 
         self.thumbnail_refs = []
 
@@ -58,23 +129,28 @@ class ChatGUI(tk.Tk):
         self.send_message()
         return "break"
 
+    def enable_image_sending(self):
+        """
+        何らかの条件が満たされ、フラグを立てるときに呼ぶ。
+        """
+        self.can_send_images = True
+        self.button_attach.config(state=tk.NORMAL)
+
     def select_image(self):
         """
-        画像ファイルを選択し、そのサムネイルをチャット欄に表示する。
+        画像を選択し、メッセージ入力欄の近くにサムネイルをプレビュー表示。
         """
         file_path = filedialog.askopenfilename(
             filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp")]
         )
         if file_path:
             self.selected_image_path = file_path
-            self.title(f"選択画像: {os.path.basename(file_path)}")
 
-            # 選択したことをチャット欄に表示 (System発言として)
-            self.add_chat(
-                speaker="System",
-                text="画像が選択されました。",
-                image_path=file_path  # 選択直後のサムネイルを表示
-            )
+            # 画像プレビューを更新
+            self.update_image_preview(file_path)
+
+            # 「選択解除」ボタンを有効化
+            self.button_cancel_selection.config(state=tk.NORMAL)
 
     def send_message(self):
         """
@@ -105,6 +181,12 @@ class ChatGUI(tk.Tk):
         self.entry_message.delete(0, tk.END)
         self.selected_image_path = None
         self.title("Chat GUI")
+
+    def cancel_selection(self):
+        self.selected_image_path = None
+        self.selected_image_thumbnail = None
+        self.label_image_preview.configure(text="", image="")
+        self.button_cancel_selection.config(state=tk.DISABLED)
 
     def set_input_in_progress(self, in_progress: bool):
         """

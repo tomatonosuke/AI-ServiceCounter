@@ -16,7 +16,7 @@ base_prompt = """
 # レスポンスフォーマット(JSON)
 ```json
 {{
-"task_name": 判断されたタスクのタイプ,
+"task_number": 判断されたタスクの番号,
 "requirements": 判断されたタスクの要件,
 "status": 判断されたタスクのステータス,
 "next_action": 判断されたタスクの次のアクション,
@@ -32,8 +32,8 @@ class Broker(Worker):
         self.task_details = task_details
         self.speaker_role = "ブローカー"
         str_task_details = "\n".join([f"{k}: {v}" for k, v in self.task_details.items()])
-        self.system_message = base_prompt.format(job_type=self.job_description["job_type"],  workplace=self.job_description["workplace"], str_task_details=str_task_details),
-    def identify_task(self, str, text: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
+        self.system_message = base_prompt.format(job_type=self.job_description["job_type"],  workplace=self.job_description["workplace"], str_task_details=str_task_details)
+    def identify_task(self, text: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
 
 
         identify_prompt = """

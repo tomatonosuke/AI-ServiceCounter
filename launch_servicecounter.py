@@ -66,8 +66,8 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
             extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=image_path, msg_history=msg_history, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
                 if extracted_json["need_help_collegue"] == "broker":
-                    extracted_json, msg_history, script_history = broker.identify_task(task_details=task_details, text =extracted_json, client=client, model=model, image_paths=image_path, msg_history=msg_history, script_history=script_history)
-                    if extracted_json["task_number"].isdigit():
+                    extracted_json, msg_history, script_history = broker.identify_task(text =extracted_json, client=client, model=model, msg_history=msg_history, script_history=script_history)
+                    if str(extracted_json["task_number"]).isdigit():
                         if int(extracted_json["task_number"]) in all_task_number:
                             task_number = extracted_json["task_number"]
                         else:
@@ -87,7 +87,8 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
             print(extracted_json)
             # Display response in GUI
             app.add_chat("Counter", extracted_json["response"])
-
+            if task_number is not None:
+                app.enable_image_sending()
             extracted_json, msg_history, script_history = observer.observe_to_continue_interaction(client=client, model=model, msg_history=msg_history, script_history=script_history)
             try:
                 is_need_of_continuation_of_interaction = int(extracted_json["is_need_of_continuation_of_interaction"])
