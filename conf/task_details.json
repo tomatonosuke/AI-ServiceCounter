@@ -3,7 +3,7 @@
         {
             "task_number": 1,
             "task_name": "転入届処理",
-            "task_content": "ユーザーに転入届の提供・記入指導・受付を行ってください。",
+            "task_content": "ユーザーに転入届の記入指導・受付を行ってください。",
             "task_status": [
                 "review",
                 "start",
@@ -14,7 +14,7 @@
         {
             "task_number": 2,
             "task_name": "転出届処理",
-            "task_content": "ユーザーに転出届の提供・記入指導・受付を行ってください。",
+            "task_content": "ユーザーに転出届の記入指導・受付を行ってください。",
             "task_status": [
                 "review",
                 "start",
@@ -25,7 +25,7 @@
         {
             "task_number": 3,
             "task_name": "児童手当振込先の金融機関を変更する処理",
-            "task_content": "ユーザーに児童手当金融機関の提供・記入指導・受付を行ってください。",
+            "task_content": "ユーザーに児童手当金融機関の記入指導・受付を行ってください。",
             "task_status": [
                 "review",
                 "start",

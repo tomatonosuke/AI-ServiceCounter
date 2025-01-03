@@ -12,10 +12,9 @@ class Reviewer(Worker):
         self.system_message = base_prompt.format(workplace=self.job_description["workplace"],job_type=self.job_description["job_type"])
         self.speaker_role = "reviewer"
 
-    def review_correctness_with_img(self, correct_img_paths: List[str], review_img_path: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None, task_list: List[str] =None) -> Dict[str, str]:
+    def review_correctness_with_img(self, correct_img_path: str, review_img_path: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None, task_list: List[str] =None) -> Dict[str, str]:
         review_correctness_prompt = """
         最初の画像が提出されたデータで、2つ目の画像が正解データです。
-        画像データが3つ以上の場合、前のプロセスに間違いがあるため、否認しその旨を記載してください。
         2つの画像データを比較し、提出されたデータの正確性を判断してください。
         画像が1つしかない場合は、前のプロセスに間違いがあるため、必ず否認してください。
         以下レスポンスフォーマットに従って出力してください。
@@ -30,10 +29,10 @@ class Reviewer(Worker):
         }}
         ```
         """
-
+        print(review_img_path, correct_img_path)
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg = review_correctness_prompt,
-            image_paths = [review_img_path] + correct_img_paths,
+            image_paths = [review_img_path] + [correct_img_path],
             model=model,
             client=client,
             system_message=self.system_message,
@@ -45,7 +44,7 @@ class Reviewer(Worker):
         )
         return resp, msg_histories, script_histories
     def review_score(self, indicators:Dict[str, str], model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
-        indicator_str = "\n".join([f"{key}: {value}" for key, value in indicators.items()])
+        indicator_str = "\n".join([indicator["name"] + ": " + indicator["definition"] for indicator in indicators])
         str_script_history = '\n'.join(script_history)
         review_score_prompt = """
         {job_type}におけるやり取りを、評価指標欄に記載された指標に従って評価してください。

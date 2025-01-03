@@ -30,7 +30,7 @@ class Broker(Worker):
     def __init__(self, job_description: Dict[str, str], task_details: Dict[str, str], base_prompt: str = base_prompt):
         self.job_description = job_description
         self.task_details = task_details
-        self.speaker_role = "ブローカー"
+        self.speaker_role = "broker"
         str_task_details = "\n".join([f"{k}: {v}" for k, v in self.task_details.items()])
         self.system_message = base_prompt.format(job_type=self.job_description["job_type"],  workplace=self.job_description["workplace"], str_task_details=str_task_details)
     def identify_task(self, text: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:

@@ -98,6 +98,7 @@ class ChatGUI(tk.Tk):
         # プレビュー用フレーム
         preview_frame = ttk.Frame(self, style="TFrame")
         preview_frame.pack(fill=tk.X, padx=10, pady=5)
+        self.button_attach.config(state=tk.NORMAL)
 
         # サムネイル表示ラベル
         self.label_image_preview = ttk.Label(preview_frame, text="", style="TLabel")
@@ -121,6 +122,8 @@ class ChatGUI(tk.Tk):
 
         self.thumbnail_refs = []
 
+        self.can_send_images = False
+
     def on_enter_key(self, event):
         """
         Entry 上で Enter キーが押されたときに呼ばれる。
@@ -138,19 +141,31 @@ class ChatGUI(tk.Tk):
 
     def select_image(self):
         """
-        画像を選択し、メッセージ入力欄の近くにサムネイルをプレビュー表示。
+        画像を選択する処理。フラグがFalseなら選択できないようにする。
         """
+        if not self.can_send_images:
+            self.add_chat("System", "image sending is not allowed yet.")
+            return
+
         file_path = filedialog.askopenfilename(
             filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp")]
         )
         if file_path:
             self.selected_image_path = file_path
-
-            # 画像プレビューを更新
             self.update_image_preview(file_path)
-
-            # 「選択解除」ボタンを有効化
             self.button_cancel_selection.config(state=tk.NORMAL)
+
+    def update_image_preview(self, image_path):
+        """
+        指定した画像パスをサムネイル化して、プレビューラベルに表示する。
+        """
+        try:
+            img = Image.open(image_path)
+            img.thumbnail((150, 150))
+            self.selected_image_thumbnail = ImageTk.PhotoImage(img)
+            self.label_image_preview.config(image=self.selected_image_thumbnail, text="")
+        except Exception as e:
+            self.label_image_preview.config(text=f"Preview failed: {e}", image="")
 
     def send_message(self):
         """

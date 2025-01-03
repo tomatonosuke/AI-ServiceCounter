@@ -18,7 +18,7 @@ class Observer(Worker):
         str_script_history = '\n'.join(script_history)
         str_task_details = "\n".join([f"{k}: {v}" for k, v in self.task_details.items()])
         observe_prompt = """
-        会話履歴から、既に顧客の要件が満たされた、もしくはさらに会話を継続することで顧客の要件が満たされる可能性があるか判断してください。
+        会話履歴から、既に顧客の要件が満たされた、もしくはさらに会話を継続することで顧客の要件が満たされる可能性があるか注意深く判断してください。
         判断された情報は、レスポンスフォーマットに従って出力してください。
 
         # タスク詳細
