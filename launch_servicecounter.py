@@ -78,10 +78,6 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                         correct_img_path = correct_img_path_format.format(task_number=task_number)
                         extracted_json, msg_history, script_history = reviewer.review_correctness_with_img( client=client, model=model, image_paths=image_path + [correct_img_path], msg_history=msg_history, script_history=script_history)
                     else:
-                        correct_img_paths = [correct_img_path_format.format(task_number=task_number) for task_number in all_task_number]
-                        task_list = [f"タスク{task_number}: {task_details['tasks'][task_number]['task_content']}" for task_number in all_task_number]
-                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(task_list=task_list, client=client, model=model, image_paths=image_path + correct_img_paths, msg_history=msg_history, script_history=script_history)
-
                         add_invalid_value_log_to_script(speaker_role="counter", attribute_name="task_number", script_history=script_history)
                 else:
                     add_invalid_value_log_to_script(speaker_role="counter", attribute_name="need_help_collegue", script_history=script_history)
