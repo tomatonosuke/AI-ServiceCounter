@@ -16,7 +16,7 @@ base_prompt = """
 # レスポンスフォーマット(JSON)
 json
 {
-"is_need_of_continuation_of_interaction": 0 or 1,
+"is_need_of_continuation_of_interaction": 0 or 1 (0:会話継続が不要, 1:会話継続が必要),
 "reason": [判断した理由],
 "own_thought": [判断した理由を踏まえた自分の考え]
 }

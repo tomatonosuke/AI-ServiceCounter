@@ -7,6 +7,11 @@ from ai_servicecounter.observer import Observer
 from ai_servicecounter.reviewer import Reviewer
 import json
 from ai_scientist.llm import create_client
+from typing import Any, List
+
+def add_invalid_value_log_to_script(speaker_role: str, attribute_name: str, script_history: List[str]):
+    script_history.append(f"system: {attribute_name} of {speaker_role} is invalid value.")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Run AI service counter")
@@ -23,7 +28,7 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
     app = ChatGUI()
     task_number = None
     job_description = None
-    with open(task_details_path, "r") as f:
+    with open(job_description_path, "r") as f:
         job_description = json.load(f)
     with open(task_details_path, "r") as f:
         task_details = json.load(f)
@@ -32,51 +37,65 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
     # actual chat history
     script_history = []
     msg_history = []
-
+    all_task_number = [task["task_number"] for task in task_details["tasks"]]
+    correct_img_path_format = "conf/correct_img/{task_number}.png"
     counter = Counter(job_description=job_description, task_details=task_details)
     observer = Observer(job_description=job_description, task_details=task_details)
     reviewer = Reviewer(job_description=job_description, task_details=task_details)
     broker = Broker(counter=counter, observer=observer, reviewer=reviewer)
-    # メインルーチン側でループを制御
     running = True
     while running:
-        # まずは Tkinter のイベントを処理
         app.update_idletasks()
         app.update()
 
-        # GUI が閉じられた (ウィンドウ×ボタン) 場合などでエラー回避
+        # Avoid errors when GUI is closed (e.g., window X button)
         if not app.winfo_exists():
             break
         counter = Counter()
-        # ユーザーの入力があれば取り出して LLM へ投げる
+        # If user input is available, send it to LLM
         user_input = app.get_user_input()
         if user_input is not None:
             user_message, image_path = user_input
-            # LLMで処理
-            extracted_json, msg_histories, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
+            # analyze situation
+            extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
                 if extracted_json["need_help_collegue"] == "broker":
-                    extracted_json, msg_histories, script_history = broker.identify_task(task_details=task_details, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
+                    extracted_json, msg_history, script_history = broker.identify_task(task_details=task_details, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
                     if extracted_json["task_number"].isdigit():
-                        task_number = extracted_json["task_number"]
-                elif extracted_json["need_help_collegue"] == "reviewer":
-                    extracted_json, msg_histories, script_history = reviewer.review_correctness_with_img(text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
+                        if int(extracted_json["task_number"]) in all_task_number:
+                            task_number = extracted_json["task_number"]
+                        else:
+                            add_invalid_value_log_to_script(speaker_role="broker", attribute_name="task_number", script_history=script_history)
 
-            extracted_json, msg_histories, script_history = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_histories, script_history=script_history)
-            # GUIに応答を表示
+                elif extracted_json["need_help_collegue"] == "reviewer":
+                    if task_number is not None:
+                        correct_img_path = correct_img_path_format.format(task_number=task_number)
+                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(text =user_message, client=client, model=model, image_paths=[image_path, correct_img_path], msg_history=msg_history, script_history=script_history)
+                    else:
+                        add_invalid_value_log_to_script(speaker_role="counter", attribute_name="task_number", script_history=script_history)
+                else:
+                    add_invalid_value_log_to_script(speaker_role="counter", attribute_name="need_help_collegue", script_history=script_history)
+
+            extracted_json, msg_history, script_history = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
+            # Display response in GUI
             app.add_chat("LLM", extracted_json["response"])
 
-            extracted_json, msg_histories, script_history = observer.observe_to_continue_interaction(task_details=task_details,text =user_message, client=client, model=model, msg_history=msg_histories, script_history=script_history)
-            if extracted_json["is_need_of_continuation_of_interaction"] == 0:
-                running = False
+            extracted_json, msg_history, script_history = observer.observe_to_continue_interaction(task_details=task_details,text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
+            try:
+                is_need_of_continuation_of_interaction = int(extracted_json["is_need_of_continuation_of_interaction"])
+                if is_need_of_continuation_of_interaction == 0:
+                    running = False
 
-        # ループが速すぎる場合に少し待機 (CPU 負荷軽減)
+            except:
+                add_invalid_value_log_to_script(speaker_role="observer", attribute_name="is_need_of_continuation_of_interaction", script_history=script_history)
+
+        # Avoid errors when GUI is closed (e.g., window X button)
         time.sleep(0.01)
 
-    # 終了処理
+    # End process
     if app.winfo_exists():
         app.destroy()
-    extracted_json, msg_histories, script_history = reviewer.review_score(indicators=indicators, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_histories, script_history=script_history)
+    extracted_json, msg_history, script_history = reviewer.review_score(indicators=indicators, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
     with open(result_path, "w") as f:
         json.dump(extracted_json, f)
 

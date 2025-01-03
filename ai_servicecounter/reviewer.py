@@ -17,12 +17,13 @@ class Reviewer(Worker):
         review_correctness_prompt = self.base_prompt + """
         最初の画像が正解データで、2つ目の画像が提出されたデータです。
         2つの画像データを比較し、提出されたデータの正確性を判断してください。
+        画像が1つしかない場合は、前のプロセスに間違いがあるため、必ず否認してください。
         以下レスポンスフォーマットに従って出力してください。
 
         # レスポンスフォーマット(JSON)
         json
         {
-        "is_approved": 0 or 1,
+        "is_approved": 0 or 1 (0:否認, 1:承認),
         "reason": [判断した理由],
         "need_correction": [修正すべき箇所]
         "correctness_score": 0-100
