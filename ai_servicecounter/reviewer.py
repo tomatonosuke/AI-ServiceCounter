@@ -12,7 +12,7 @@ class Reviewer(Worker):
         self.system_message = base_prompt.format(workplace=self.job_description["workplace"],job_type=self.job_description["job_type"])
         self.speaker_role = "reviewer"
 
-    def review_correctness_with_img(self, correct_img_path: str, review_img_path: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None, task_list: List[str] =None) -> Dict[str, str]:
+    def review_correctness_with_img(self, correct_img_path: str, review_img_base64: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None, task_list: List[str] =None) -> Dict[str, str]:
         review_correctness_prompt = """
         最初の画像が提出されたデータで、2つ目の画像が正解データです。
         2つの画像データを比較し、提出されたデータの正確性を判断してください。
@@ -29,10 +29,10 @@ class Reviewer(Worker):
         }}
         ```
         """
-        print(review_img_path, correct_img_path)
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg = review_correctness_prompt,
-            image_paths = [review_img_path] + [correct_img_path],
+            image_paths = [correct_img_path],
+            image_base64_paths = [review_img_base64] ,
             model=model,
             client=client,
             system_message=self.system_message,

@@ -24,7 +24,7 @@ class Counter(Worker):
         self.speaker_role = "counter"
         self.system_message = base_prompt.format(collegues=self.job_description["counter"]["collegues"],workplace=self.job_description["workplace"],job_type=self.job_description["job_type"])
 
-    def analyze_situation(self, image_paths: List[str], text: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None):
+    def analyze_situation(self, image_paths: List[str], image_base64_paths: List[str], text: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None):
 
         str_script_history = '\n'.join(script_history)
         check_situation_prompt = """
@@ -53,6 +53,7 @@ class Counter(Worker):
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg= check_situation_prompt.format(text=text, str_script_history=str_script_history),
             image_paths=image_paths,
+            image_base64_paths=image_base64_paths,
             model=model,
             client=client,
             print_debug=False,
@@ -92,6 +93,7 @@ class Counter(Worker):
                 msg= get_response_prompt.format(str_script_history=str_script_history, text=text),
                 model=model,
                 image_paths=[],
+                image_base64_paths=[],
                 client=client,
                 print_debug=False,
                 msg_history=msg_history,

@@ -276,6 +276,7 @@ def encode_image(image_path):
 def get_response_and_scripts_with_img_from_llm(
         msg,
         image_paths: List[str],
+        image_base64_paths: List[str],
         client,
         model,
         system_message,
@@ -294,12 +295,12 @@ def get_response_and_scripts_with_img_from_llm(
     if speaker_role is None:
         speaker_role = ""
 
-    if len(image_paths) == 0:
+    if len(image_paths) == 0 and len(image_base64_paths) == 0:
         return get_response_and_scripts_from_llm(msg=msg, client=client, model=model, system_message=system_message, print_debug=print_debug, msg_history=msg_history, temperature=temperature, speaker_role=speaker_role, script_history=script_history)
 
-    base64_images = []
+
     for image_path in image_paths:
-        base64_images.append(encode_image(image_path))
+        image_base64_paths.append(encode_image(image_path))
     if model in [
         "gpt-4o-2024-05-13",
         "gpt-4o-mini-2024-07-18",
