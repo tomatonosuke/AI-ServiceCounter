@@ -1,5 +1,7 @@
 import argparse
 import time
+import datetime
+
 from ai_servicecounter.gui_counter import ChatGUI
 from ai_servicecounter.broker import Broker
 from ai_servicecounter.counter import Counter
@@ -8,6 +10,8 @@ from ai_servicecounter.reviewer import Reviewer
 import json
 from ai_scientist.llm import create_client
 from typing import Any, List
+
+current_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 def add_invalid_value_log_to_script(speaker_role: str, attribute_name: str, script_history: List[str]):
     script_history.append(f"system: {attribute_name} of {speaker_role} is invalid value.")
@@ -18,8 +22,8 @@ def parse_arguments():
     parser.add_argument("--job_path", type=str, required=True, help="Path to the job description file")
     parser.add_argument("--task_path", type=str, required=True, help="Path to the task details file")
     parser.add_argument("--model", type=str, required=True, help="Model name")
-    parser.add_argument("--gpus", type=int, required=True, help="Number of GPUs")
     parser.add_argument("--result_path", type=str, required=True, help="Path to the result file")
+
     return parser.parse_args()
 
 def main(job_description_path: str, task_details_path: str, model: str, gpus: int, client: Any):
@@ -95,9 +99,25 @@ def main(job_description_path: str, task_details_path: str, model: str, gpus: in
     # End process
     if app.winfo_exists():
         app.destroy()
+
+    # generate result indicator
     extracted_json, msg_history, script_history = reviewer.review_score(indicators=indicators, text =user_message, client=client, model=model, image_paths=[image_path], msg_history=msg_history, script_history=script_history)
+    extracted_json["timestamp"] = current_timestamp
     with open(result_path, "w") as f:
         json.dump(extracted_json, f)
+    try:
+        with open(result_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"File not found: {result_path}")
+        result_data = []
+
+    result_data.append(extracted_json)
+
+    # !TODO: Add exclusive control
+    with open(result_data, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
 
 if __name__ == "__main__":
     args = parse_arguments()
@@ -105,5 +125,4 @@ if __name__ == "__main__":
     task_details_path = args.task_path
     result_path = args.result_path
     model = args.model
-    gpus = args.gpus
     main(job_description_path=job_description_path, task_details_path=task_details_path, model=model, gpus=gpus)

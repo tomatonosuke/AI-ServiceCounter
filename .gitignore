@@ -173,3 +173,4 @@ templates/*/run_0/
 templates/*/*.png
 results/*
 conf/correct_img/*
+performance_result/*

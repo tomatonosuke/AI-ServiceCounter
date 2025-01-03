@@ -7,8 +7,9 @@
 また、窓口業務を各役割のAIに分担した上でタスク内容を抽象的に定義し、それらを協調動作させることで、業務の最低限の定義でもサービスを提供できるようにすることを目指している。
 
 ## 主な特徴
-- ユーザーとの会話を通して、ユーザーの要望に合わせて、訂正・受理できる書類の詳細を提示する。
+- ユーザーとの会話を通して、ユーザーの要望を汲み取り、それに合わせて窓口業務を行う。
 - ユーザーから申請された書類画像を参照し、訂正・受理を行う。
+- 一連の窓口業務フロー遷移の一部と、窓口業務の終了判断をAIに任せる。
 - ユーザーとの一連の会話を評価し、各担当者のフィードバックサイクルを構築する。
 
 ## アーキテクチャ
@@ -43,8 +44,15 @@ graph TD
 ```
 
 ## 使い方
-現バージョンでは、OpenAI APIのみ利用可能。
-窓口業務の定義は、`conf/job_description.json`と`conf/task_details.json`で行う。
+### 環境構築
+```
+pyenv install 3.11.0b4
+pyenv local 3.11.0b4
+pip install -r requirements.txt
+export OPENAI_API_KEY=your_api_key
+```
+現バージョンでは、OpenAI APIのみ利用可能。  
+窓口業務の定義は、`conf/job_description.json`と`conf/task_details.json`で行う。  
 
 まずは、`conf/job_description.json`を編集して、サービスの内容を定義する。
 ```
@@ -94,7 +102,7 @@ graph TD
 
 次に、`conf/task_details.json`を編集して、各AI役割者が行うタスクの詳細を定義する。
 例では、転入届と転出届の2つの申請処理を定義している。
-定義されたタスクごとの正解画像を用意し、ユーザーの提出書類と比較している。
+定義されたタスクごとの正解画像を用意する必要があり、これをユーザーの提出書類と比較している。
 ```
 {
     "tasks": [
@@ -123,4 +131,7 @@ graph TD
     ]
 }
 
+### 実行方法
+```
+python launch_servicecounter.py --job_path "conf/job_description.json" --task_path "conf/task_details.json" --model "gpt-4o-mini" --result_path "performance_result/result.json"
 ```
