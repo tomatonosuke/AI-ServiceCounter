@@ -275,11 +275,11 @@ def encode_image(image_path):
 @backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.APITimeoutError))
 def get_response_and_scripts_with_img_from_llm(
         msg,
-        image_paths: List[str],
-        image_base64_paths: List[str],
         client,
         model,
         system_message,
+        image_paths: List[str] = [],
+        image_base64_values: List[str] = [],
         print_debug=False,
         msg_history=None,
         temperature=0.75,
@@ -295,12 +295,12 @@ def get_response_and_scripts_with_img_from_llm(
     if speaker_role is None:
         speaker_role = ""
 
-    if len(image_paths) == 0 and len(image_base64_paths) == 0:
+    if len(image_paths) == 0 and len(image_base64_values) == 0:
         return get_response_and_scripts_from_llm(msg=msg, client=client, model=model, system_message=system_message, print_debug=print_debug, msg_history=msg_history, temperature=temperature, speaker_role=speaker_role, script_history=script_history)
 
 
     for image_path in image_paths:
-        image_base64_paths.append(encode_image(image_path))
+        image_base64_values.append(encode_image(image_path))
     if model in [
         "gpt-4o-2024-05-13",
         "gpt-4o-mini-2024-07-18",
@@ -311,7 +311,7 @@ def get_response_and_scripts_with_img_from_llm(
             {"role": "system", "content": system_message},
             {"role": "user", "content": [
                 {"type": "text", "text": msg},
-                ] + [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}} for base64_image in base64_images]
+                ] + [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}} for base64_image in image_base64_values]
             },
         ]
         response = client.chat.completions.create(

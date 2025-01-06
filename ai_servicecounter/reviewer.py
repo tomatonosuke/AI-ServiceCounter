@@ -1,6 +1,6 @@
 from ai_servicecounter.worker import Worker
 from typing import Dict, List
-from ai_scientist.llm import get_response_and_scripts_with_img_from_llm, get_response_and_scripts_from_llm
+from ai_scientist.llm import encode_image, get_response_and_scripts_with_img_from_llm, get_response_and_scripts_from_llm
 
 base_prompt = """
 あなたは{workplace}で{job_type}の評価者をしています。
@@ -14,10 +14,11 @@ class Reviewer(Worker):
 
     def review_correctness_with_img(self, correct_img_path: str, review_img_base64: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None, task_list: List[str] =None) -> Dict[str, str]:
         review_correctness_prompt = """
+        今から画像を２つ提出します。
         最初の画像が提出されたデータで、2つ目の画像が正解データです。
         2つの画像データを比較し、提出されたデータの正確性を判断してください。
-        画像が1つしかない場合は、前のプロセスに間違いがあるため、必ず否認してください。
-        以下レスポンスフォーマットに従って出力してください。
+        次のレスポンスは、以下レスポンスフォーマットに従って出力してください。
+        今の会話はレスポンス不要です。
 
         # レスポンスフォーマット(JSON)
         ```json
@@ -31,8 +32,8 @@ class Reviewer(Worker):
         """
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg = review_correctness_prompt,
-            image_paths = [correct_img_path],
-            image_base64_paths = [review_img_base64] ,
+            image_paths = [ ],
+            image_base64_values = [ review_img_base64] ,
             model=model,
             client=client,
             system_message=self.system_message,
@@ -42,6 +43,33 @@ class Reviewer(Worker):
             speaker_role=self.speaker_role,
             script_history=script_history,
         )
+        second_message = """
+        2つめの画像を提出します。
+
+        # レスポンスフォーマット(JSON)
+        ```json
+        {{
+        "is_approved": 0 or 1 (0:否認, 1:承認),
+        "reason": 判断した理由,
+        "need_correction": 修正すべき箇所,
+        "correctness_score": 0-100
+        }}
+        ```
+        """
+        resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
+            msg = second_message,
+            image_paths = [ ],
+            image_base64_values = [ encode_image(correct_img_path)] ,
+            model=model,
+            client=client,
+            system_message=self.system_message,
+            print_debug=False,
+            msg_history=msg_history,
+            temperature=0.75,
+            speaker_role=self.speaker_role,
+            script_history=script_history,
+        )
+
         return resp, msg_histories, script_histories
     def review_score(self, indicators:Dict[str, str], model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
         indicator_str = "\n".join([indicator["name"] + ": " + indicator["definition"] for indicator in indicators])

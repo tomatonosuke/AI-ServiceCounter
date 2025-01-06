@@ -5,5 +5,5 @@ class Worker:
         pass
     def _extract_json(self, resp):
         json_output = extract_json_between_markers(resp)
-        assert json_output is not None, "Failed to extract JSON from LLM output"
+        assert json_output is not None, f"Error parsing json: {resp}"
         return json_output

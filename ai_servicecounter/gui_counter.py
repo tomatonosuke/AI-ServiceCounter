@@ -15,7 +15,7 @@ class ChatGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Chat GUI")
-        self.geometry("700x500")
+        self.geometry("800x600")
 
         # ---------- スタイル設定 ----------
         self.style = ttk.Style()
@@ -81,6 +81,7 @@ class ChatGUI(tk.Tk):
         self.entry_message.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self.entry_message.bind("<Return>", self.on_enter_key)
 
+        # 初期状態で画像ボタンを無効化
         self.button_attach = ttk.Button(bottom_frame, text="attach image", command=self.select_image, state=tk.DISABLED)
         self.button_attach.pack(side=tk.LEFT, padx=5)
 
@@ -112,8 +113,8 @@ class ChatGUI(tk.Tk):
         # 画像送信が可能かどうかのフラグ
         self.can_send_images = False
 
-        # テスト用: 実行時すぐに画像添付を許可（必要に応じて削除）
-        self.enable_image_sending()
+        # ユーザーが送信した画像を保持するための変数
+        self.for_llm_image_b64 = None
 
     def on_enter_key(self, event):
         self.send_message()
@@ -164,6 +165,14 @@ class ChatGUI(tk.Tk):
         except Exception as e:
             self.label_image_preview.config(text=f"Preview failed: {e}", image="")
 
+    def cancel_preview(self):
+        """
+        選択を解除し、プレビューを消す。
+        """
+        self.selected_image_thumbnail = None
+        self.label_image_preview.configure(text="", image="")
+        self.button_cancel_selection.config(state=tk.DISABLED)
+
     def cancel_selection(self):
         """
         選択を解除し、プレビューを消す。
@@ -186,7 +195,7 @@ class ChatGUI(tk.Tk):
             return
 
         # チャット画面にユーザーの発言を表示
-        self.add_chat("User", user_message, image_b64=self.user_image_b64)
+        self.add_chat("User", user_message, image_b64= self.user_image_b64)
 
         # 入力内容をクラス変数にセット
         self.user_message = user_message
@@ -199,7 +208,12 @@ class ChatGUI(tk.Tk):
         self.entry_message.delete(0, tk.END)
 
         # 画像もリセット
-        self.cancel_selection()
+        self.cancel_preview()
+
+        self.for_llm_image_b64 = self.user_image_b64
+        self.user_image_b64 = None
+        print(f"for_llm_image_b64: {self.for_llm_image_b64[:3]}")
+
 
     def set_input_in_progress(self, in_progress: bool):
         self.user_input_flag = in_progress
@@ -229,7 +243,6 @@ class ChatGUI(tk.Tk):
             except Exception as e:
                 self.chat_display.insert(tk.END, f"\n[画像の読み込み失敗: {e}]\n")
 
-        self.chat_display.insert(tk.END, "\n\n")
         self.chat_display.config(state='disabled')
         self.chat_display.see(tk.END)
 

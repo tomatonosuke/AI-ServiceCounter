@@ -64,9 +64,9 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
         if app.user_input_flag:
             user_message = app.user_message
 
-            image_base64 = [] if app.user_image_path is None else [app.user_image_b64]
+            image_base64 = [] if app.for_llm_image_b64 is None else [app.for_llm_image_b64]
             # analyze situation
-            extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_paths=image_base64, msg_history=msg_history, script_history=script_history)
+            extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_base64_values=image_base64, msg_history=msg_history, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
                 if extracted_json["need_help_collegue"] == "broker":
                     extracted_json, msg_history, script_history = broker.identify_task(text =extracted_json, client=client, model=model, msg_history=msg_history, script_history=script_history)
@@ -79,7 +79,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                 elif extracted_json["need_help_collegue"] == "reviewer":
                     if task_number is not None:
                         correct_img_path = correct_img_path_format.format(task_number=task_number)
-                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img( client=client, model=model, review_img_path=image_base64[0], correct_img_path=correct_img_path, msg_history=msg_history, script_history=script_history)
+                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img( client=client, model=model, review_img_base64=image_base64[0], correct_img_path=correct_img_path, msg_history=msg_history, script_history=script_history)
                     else:
                         add_invalid_value_log_to_script(speaker_role="counter", attribute_name="task_number", script_history=script_history)
                 else:
