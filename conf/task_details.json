@@ -13,8 +13,8 @@
         },
         {
             "task_number": 2,
-            "task_name": "転出届処理",
-            "task_content": "ユーザーに転出届の記入指導・受付を行ってください。",
+            "task_name": "子どもの医療費助成申請処理",
+            "task_content": "ユーザーに子どもの医療費助成申請届の記入指導・受付を行ってください。",
             "task_status": [
                 "review",
                 "start",
