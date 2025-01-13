@@ -6,12 +6,14 @@ from tkinter import filedialog, scrolledtext
 import os
 from PIL import Image, ImageTk
 
+
 class ChatGUI(tk.Tk):
     """
     tkinter を使ったチャット風の GUI アプリ。
     「メッセージ送信」時のコールバックをメインルーチンから受け取り、
     結果を表示する。
     """
+
     def __init__(self):
         super().__init__()
         self.title("Chat GUI")
@@ -26,7 +28,8 @@ class ChatGUI(tk.Tk):
         background_color = "#fafafa"
         accent_color = "#1a73e8"
         text_color = "#333333"
-        font_family = "Helvetica"   # 好みのフォントに変更可 (例: "Century Gothic", "Arial")
+        # 好みのフォントに変更可 (例: "Century Gothic", "Arial")
+        font_family = "Helvetica"
 
         # フレームの背景色
         self.style.configure("TFrame", background=background_color)
@@ -82,20 +85,24 @@ class ChatGUI(tk.Tk):
         self.entry_message.bind("<Return>", self.on_enter_key)
 
         # 初期状態で画像ボタンを無効化
-        self.button_attach = ttk.Button(bottom_frame, text="attach image", command=self.select_image, state=tk.DISABLED)
+        self.button_attach = ttk.Button(
+            bottom_frame, text="attach image", command=self.select_image, state=tk.DISABLED)
         self.button_attach.pack(side=tk.LEFT, padx=5)
 
-        self.button_send = ttk.Button(bottom_frame, text="send", command=self.send_message)
+        self.button_send = ttk.Button(
+            bottom_frame, text="send", command=self.send_message)
         self.button_send.pack(side=tk.LEFT, padx=5)
 
         # プレビュー用フレーム
         preview_frame = ttk.Frame(self, style="TFrame")
         preview_frame.pack(fill=tk.X, padx=10, pady=5)
 
-        self.label_image_preview = ttk.Label(preview_frame, text="", style="TLabel")
+        self.label_image_preview = ttk.Label(
+            preview_frame, text="", style="TLabel")
         self.label_image_preview.pack(side=tk.LEFT, padx=5)
 
-        self.button_cancel_selection = ttk.Button(preview_frame, text="cancel", command=self.cancel_selection)
+        self.button_cancel_selection = ttk.Button(
+            preview_frame, text="cancel", command=self.cancel_selection)
         self.button_cancel_selection.pack(side=tk.LEFT, padx=5)
         self.button_cancel_selection.config(state=tk.DISABLED)
 
@@ -143,7 +150,8 @@ class ChatGUI(tk.Tk):
             # ★ ファイルを開いてバイナリを読み込み & base64化
             with open(file_path, "rb") as f:
                 raw_data = f.read()
-                self.user_image_b64 = base64.b64encode(raw_data).decode("utf-8")
+                self.user_image_b64 = base64.b64encode(
+                    raw_data).decode("utf-8")
 
             # 選択された画像をプレビュー表示 (base64→PIL→PhotoImage化)
             self.update_image_preview(self.user_image_b64)
@@ -161,9 +169,11 @@ class ChatGUI(tk.Tk):
             img.thumbnail((150, 150))
             self.selected_image_thumbnail = ImageTk.PhotoImage(img)
 
-            self.label_image_preview.config(image=self.selected_image_thumbnail, text="")
+            self.label_image_preview.config(
+                image=self.selected_image_thumbnail, text="")
         except Exception as e:
-            self.label_image_preview.config(text=f"Preview failed: {e}", image="")
+            self.label_image_preview.config(
+                text=f"Preview failed: {e}", image="")
 
     def cancel_preview(self):
         """
@@ -195,7 +205,7 @@ class ChatGUI(tk.Tk):
             return
 
         # チャット画面にユーザーの発言を表示
-        self.add_chat("User", user_message, image_b64= self.user_image_b64)
+        self.add_chat("User", user_message, image_b64=self.user_image_b64)
 
         # 入力内容をクラス変数にセット
         self.user_message = user_message
@@ -212,8 +222,6 @@ class ChatGUI(tk.Tk):
 
         self.for_llm_image_b64 = self.user_image_b64
         self.user_image_b64 = None
-        print(f"for_llm_image_b64: {self.for_llm_image_b64[:3]}")
-
 
     def set_input_in_progress(self, in_progress: bool):
         self.user_input_flag = in_progress
@@ -246,9 +254,11 @@ class ChatGUI(tk.Tk):
         self.chat_display.config(state='disabled')
         self.chat_display.see(tk.END)
 
+
 def main():
     app = ChatGUI()
     app.mainloop()
+
 
 if __name__ == "__main__":
     main()

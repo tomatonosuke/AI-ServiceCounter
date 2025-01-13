@@ -4,7 +4,7 @@ import requests
 from ai_scientist.llm import get_response_and_scripts_from_llm, get_response_and_scripts_with_img_from_llm
 from ai_servicecounter.worker import Worker
 from typing import Dict, List
-
+import datetime
 base_prompt = """
 あなたは{workplace}で{job_type}の窓口対応をしています。
 以下に同僚名と同僚が実施できるタスクを記載します。
@@ -12,8 +12,8 @@ base_prompt = """
 礼儀正しい対応を心がけてください。同僚からの情報はかみ砕いて伝えてください。
 一連の窓口対応では、1つのタスク対応しか出来ないことを留意してください。
 窓口の代表者としてユーザーと接し、同僚がいることは悟られないようにしてください。
-ユーザーはすでに書類を書き終えている可能性も考慮してください。
-
+書類のチェックはreviewerに依頼してください。
+今日は{current}です。
 """
 
 
@@ -23,9 +23,10 @@ class Counter(Worker):
         self.current_attempt = 0
         self.job_description = job_description
         self.speaker_role = "counter"
-        self.system_message = base_prompt.format(collegues=self.job_description["counter"]["collegues"],workplace=self.job_description["workplace"],job_type=self.job_description["job_type"])
+        self.system_message = base_prompt.format(
+            collegues=self.job_description["counter"]["collegues"], workplace=self.job_description["workplace"], job_type=self.job_description["job_type"], current=datetime.datetime.now())
 
-    def analyze_situation(self, image_base64_values: List[str], text: str, model: str, client: str, msg_history:str =None, return_msg_history: bool =False, system_prompt: str =None, script_history: List[str] =None):
+    def analyze_situation(self, text: str, model: str, client: str, msg_history: str = None, return_msg_history: bool = False, system_prompt: str = None, script_history: List[str] = None):
 
         str_script_history = '\n'.join(script_history)
         check_situation_prompt = """
@@ -39,7 +40,9 @@ class Counter(Worker):
 
         会話履歴と顧客からのメッセージをもとに、以下のフォーマットにて記載された情報を出力してください。
         また、後続タスクを頼む同僚の名前をneed_help_collegueに出力してください。不要な場合は空文字列にしてください。
-        ただし、最初はかならずbrokerに頼んで仕事を分類してください。
+        ただし、会話履歴上でbrokerが仕事を分類していない場合はまずbrokerに頼んで仕事を分類してください。
+        また、顧客から書類を受領したらreviewerにチェックを依頼してください。
+
         # レスポンスフォーマット(JSON)
         ```json
         {{
@@ -52,8 +55,8 @@ class Counter(Worker):
         ```
         """
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
-            msg= check_situation_prompt.format(text=text, str_script_history=str_script_history),
-            image_base64_values=image_base64_values,
+            msg=check_situation_prompt.format(
+                text=text, str_script_history=str_script_history),
             model=model,
             client=client,
             print_debug=False,
@@ -66,8 +69,7 @@ class Counter(Worker):
         extracted_json = self._extract_json(resp)
         return extracted_json, msg_histories, script_histories
 
-
-    def respond_with_context(self, text: str, model: str, client: str, msg_history:str =None, script_history: List[str] =None):
+    def respond_with_context(self, text: str, model: str, client: str, msg_history: str = None, script_history: List[str] = None):
         str_script_history = '\n'.join(script_history)
         get_response_prompt = """
         以下に、これまでの会話履歴と、顧客からのメッセージを記載します。
@@ -91,7 +93,8 @@ class Counter(Worker):
         """
         try:
             resp, msg_histories, script_history = get_response_and_scripts_with_img_from_llm(
-                msg= get_response_prompt.format(str_script_history=str_script_history, text=text),
+                msg=get_response_prompt.format(
+                    str_script_history=str_script_history, text=text),
                 model=model,
                 image_paths=[],
                 image_base64_values=[],

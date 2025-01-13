@@ -17,4 +17,4 @@ wandb
 tqdm
 requests
 
-Pillow=11.1.0
+Pillow==11.1.0

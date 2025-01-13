@@ -6,19 +6,24 @@ base_prompt = """
 あなたは{workplace}に勤務する{job_type}の監督者です。
 
 """
+
+
 class Observer(Worker):
-    def __init__(self, job_description: Dict[str, str],task_details: Dict[str, str], base_prompt: str = base_prompt):
+    def __init__(self, job_description: Dict[str, str], task_details: Dict[str, str], base_prompt: str = base_prompt):
         self.job_description = job_description
         self.task_details = task_details
         self.speaker_role = "observer"
 
-        self.system_message = base_prompt.format(workplace=self.job_description["workplace"],job_type=self.job_description["job_type"])
+        self.system_message = base_prompt.format(
+            workplace=self.job_description["workplace"], job_type=self.job_description["job_type"])
 
-    def observe_to_continue_interaction(self, model: str, client: str, msg_history:str =None, script_history: List[str] =None) -> Dict[str, str]:
+    def observe_to_continue_interaction(self, model: str, client: str, msg_history: str = None, script_history: List[str] = None) -> Dict[str, str]:
         str_script_history = '\n'.join(script_history)
-        str_task_details = "\n".join([f"{k}: {v}" for k, v in self.task_details.items()])
+        str_task_details = "\n".join(
+            [f"{k}: {v}" for k, v in self.task_details.items()])
         observe_prompt = """
         会話履歴から、既に顧客の要件が満たされた、もしくはさらに会話を継続することで顧客の要件が満たされる可能性があるか注意深く判断してください。
+        顧客が帰りたがっている場合も要件を満たしたと判断してください。
         判断された情報は、レスポンスフォーマットに従って出力してください。
 
         # タスク詳細
@@ -37,7 +42,8 @@ class Observer(Worker):
         ```
         """
         resp, msg_histories, script_history = get_response_and_scripts_from_llm(
-            msg=observe_prompt.format(str_script_history=str_script_history, str_task_details=str_task_details),
+            msg=observe_prompt.format(
+                str_script_history=str_script_history, str_task_details=str_task_details),
             system_message=self.system_message,
             model=model,
             client=client,

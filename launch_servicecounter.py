@@ -13,17 +13,23 @@ from typing import Any, List
 
 current_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
+
 def add_invalid_value_log_to_script(speaker_role: str, attribute_name: str, script_history: List[str]):
-    script_history.append(f"system: {attribute_name} of {speaker_role} is invalid value.")
+    script_history.append(
+        f"system: {attribute_name} of {speaker_role} is invalid value.")
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Run AI service counter")
-    parser.add_argument("--job_path", type=str, required=True, help="Path to the job description file")
-    parser.add_argument("--task_path", type=str, required=True, help="Path to the task details file")
+    parser.add_argument("--job_path", type=str, required=True,
+                        help="Path to the job description file")
+    parser.add_argument("--task_path", type=str, required=True,
+                        help="Path to the task details file")
     parser.add_argument("--model", type=str, required=True, help="Model name")
-    parser.add_argument("--result_path", type=str, required=True, help="Path to the result file")
-    parser.add_argument("--script_history_dir", type=str, required=True, help="Path to the script history file")
+    parser.add_argument("--result_path", type=str,
+                        required=True, help="Path to the result file")
+    parser.add_argument("--script_history_dir", type=str,
+                        required=True, help="Path to the script history file")
     return parser.parse_args()
 
 
@@ -35,7 +41,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
     job_description = None
     with open(job_description_path, "r", encoding="utf-8") as f:
         job_description = json.load(f)
-    with open(task_details_path, "r", encoding="utf-8"  ) as f:
+    with open(task_details_path, "r", encoding="utf-8") as f:
         task_details = json.load(f)
     client, client_model = create_client(model)
     indicators = job_description["reviewer"]["indicators"]
@@ -45,14 +51,14 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
     all_task_number = [task["task_number"] for task in task_details["tasks"]]
     correct_img_path_format = "conf/correct_img/{task_number}.png"
     counter = Counter(job_description=job_description)
-    observer = Observer(job_description=job_description, task_details=task_details)
+    observer = Observer(job_description=job_description,
+                        task_details=task_details)
     reviewer = Reviewer(job_description=job_description)
     broker = Broker(job_description=job_description, task_details=task_details)
     running = True
     step = 0
     while True:
         if not running:
-            time.sleep(5)
             break
         app.update_idletasks()
         app.update()
@@ -66,40 +72,56 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
 
             image_base64 = [] if app.for_llm_image_b64 is None else [app.for_llm_image_b64]
             # analyze situation
-            extracted_json, msg_history, script_history = counter.analyze_situation(text =user_message, client=client, model=model, image_base64_values=image_base64, msg_history=msg_history, script_history=script_history)
+            extracted_json, msg_history, script_history = counter.analyze_situation(
+                text=user_message, client=client, model=model,  msg_history=msg_history, script_history=script_history)
             if extracted_json["need_help_collegue"] != "":
                 if extracted_json["need_help_collegue"] == "broker":
-                    extracted_json, msg_history, script_history = broker.identify_task(text =extracted_json, client=client, model=model, msg_history=msg_history, script_history=script_history)
+                    extracted_json, msg_history, script_history = broker.identify_task(
+                        text=extracted_json, client=client, model=model, msg_history=msg_history, script_history=script_history)
                     if str(extracted_json["task_number"]).isdigit():
                         if int(extracted_json["task_number"]) in all_task_number:
                             task_number = extracted_json["task_number"]
                         else:
-                            add_invalid_value_log_to_script(speaker_role="broker", attribute_name="task_number", script_history=script_history)
+                            add_invalid_value_log_to_script(
+                                speaker_role="broker", attribute_name="task_number", script_history=script_history)
 
                 elif extracted_json["need_help_collegue"] == "reviewer":
                     if task_number is not None:
-                        correct_img_path = correct_img_path_format.format(task_number=task_number)
-                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img( client=client, model=model, review_img_base64=image_base64[0], correct_img_path=correct_img_path, msg_history=msg_history, script_history=script_history)
+                        correct_img_path = correct_img_path_format.format(
+                            task_number=task_number)
+                        extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(
+                            client=client, model=model, review_img_base64=image_base64[0], correct_img_path=correct_img_path, msg_history=msg_history, script_history=script_history)
                     else:
-                        add_invalid_value_log_to_script(speaker_role="counter", attribute_name="task_number", script_history=script_history)
+                        add_invalid_value_log_to_script(
+                            speaker_role="counter", attribute_name="task_number", script_history=script_history)
                 else:
-                    add_invalid_value_log_to_script(speaker_role="counter", attribute_name="need_help_collegue", script_history=script_history)
+                    add_invalid_value_log_to_script(
+                        speaker_role="counter", attribute_name="need_help_collegue", script_history=script_history)
 
             # Counter's message to user
-            extracted_json, msg_history, script_history = counter.respond_with_context(text =user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
+            extracted_json, msg_history, script_history = counter.respond_with_context(
+                text=user_message, client=client, model=model, msg_history=msg_history, script_history=script_history)
 
             # Display response in GUI
             app.add_chat("Counter", extracted_json["response"])
             if task_number is not None:
                 app.enable_image_sending()
-            extracted_json, msg_history, script_history = observer.observe_to_continue_interaction(client=client, model=model, msg_history=msg_history, script_history=script_history)
+            extracted_json, msg_history, script_history = observer.observe_to_continue_interaction(
+                client=client, model=model, msg_history=msg_history, script_history=script_history)
             try:
-                is_need_of_continuation_of_interaction = int(extracted_json["is_need_of_continuation_of_interaction"])
+                is_need_of_continuation_of_interaction = int(
+                    extracted_json["is_need_of_continuation_of_interaction"])
                 if is_need_of_continuation_of_interaction == 0:
+                    app.add_chat(
+                        "System", "Completed. This chat will be closed after 10 seconds.")
                     running = False
+                    app.update_idletasks()
+                    app.update()
+                    time.sleep(10)
 
-            except:
-                add_invalid_value_log_to_script(speaker_role="observer", attribute_name="is_need_of_continuation_of_interaction", script_history=script_history)
+            except Exception as e:
+                add_invalid_value_log_to_script(
+                    speaker_role="observer", attribute_name="is_need_of_continuation_of_interaction", script_history=script_history)
             app.set_input_in_progress(False)
 
             str_script_history = "\n".join(script_history)
@@ -110,29 +132,30 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
 
     # End process
     if app.winfo_exists():
+
         app.destroy()
 
     # generate result indicator
-    extracted_json, msg_history, script_history = reviewer.review_score(indicators=indicators,  client=client, model=model, msg_history=msg_history, script_history=script_history)
+    extracted_json, msg_history, script_history = reviewer.review_score(
+        indicators=indicators,  client=client, model=model, msg_history=msg_history, script_history=script_history)
+    print(extracted_json)
     extracted_json["timestamp"] = current_timestamp
-    with open(result_path, "w") as f:
-        json.dump(extracted_json, f)
+
     try:
         with open(result_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            result_data = json.load(f)
     except FileNotFoundError:
         print(f"File not found: {result_path}")
-        result_data = []
+        result_data = {"result": []}
 
-    result_data.append(extracted_json)
+    result_data["result"].append(extracted_json)
 
     # !TODO: Add exclusive control
-    with open(result_data, "w", encoding="utf-8") as f:
+    with open(result_path, "w", encoding="utf-8") as f:
         json.dump(result_data, f, ensure_ascii=False, indent=4)
 
-    with open(os.path.join(script_history_dir,current_timestamp, "_script_history.json")  , "w", encoding="utf-8") as f:
+    with open(os.path.join(script_history_dir, f"{current_timestamp}_script_history.json"), "w", encoding="utf-8") as f:
         json.dump(script_history, f, ensure_ascii=False, indent=4)
-
 
 
 if __name__ == "__main__":
@@ -142,4 +165,5 @@ if __name__ == "__main__":
     result_path = args.result_path
     script_history_dir = args.script_history_dir
     model = args.model
-    main(script_history_dir=script_history_dir, job_description_path=job_description_path, task_details_path=task_details_path, model=model, result_path=result_path)
+    main(script_history_dir=script_history_dir, job_description_path=job_description_path,
+         task_details_path=task_details_path, model=model, result_path=result_path)

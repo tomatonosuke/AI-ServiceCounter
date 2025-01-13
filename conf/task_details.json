@@ -3,7 +3,7 @@
         {
             "task_number": 1,
             "task_name": "転入届処理",
-            "task_content": "ユーザーに転入届の記入指導・受付を行ってください。",
+            "task_content": "転入届の記入指導・受付を行ってください。",
             "task_status": [
                 "review",
                 "start",
@@ -14,7 +14,7 @@
         {
             "task_number": 2,
             "task_name": "子どもの医療費助成申請処理",
-            "task_content": "ユーザーに子どもの医療費助成申請届の記入指導・受付を行ってください。",
+            "task_content": "子どもの医療費助成申請届の記入指導・受付を行ってください。",
             "task_status": [
                 "review",
                 "start",
@@ -25,7 +25,18 @@
         {
             "task_number": 3,
             "task_name": "児童手当振込先の金融機関を変更する処理",
-            "task_content": "ユーザーに児童手当金融機関の記入指導・受付を行ってください。",
+            "task_content": "児童手当金融機関の記入指導・受付を行ってください。",
+            "task_status": [
+                "review",
+                "start",
+                "accepted"
+            ],
+            "correct_img_path": "conf/correct_img/3.jpg"
+        },
+        {
+            "task_number": 4,
+            "task_name": "住民票の写し、除票の交付請求書の記入指導・受付",
+            "task_content": "住民登録がある人の住民票の写し、除票の交付請求書の記入指導・受付を行ってください。委任状も交付請求書と同じように扱ってください。",
             "task_status": [
                 "review",
                 "start",

@@ -2,9 +2,9 @@
 
 ## 概要
 
-主に日本の役所・行政機関における書類申請窓口での業務をAIで提供することを想定している。
-移民が増えることでの言語的な障壁、高齢化による人手不足やデジタル化が進まないこと等によるサービス提供上の課題を解消することを目指している。
-また、窓口業務を各役割のAIに分担した上でタスク内容を抽象的に定義し、それらを協調動作させることで、業務の最低限の定義でもサービスを提供できるようにすることを目指している。
+主に日本の役所・行政機関における書類申請窓口での業務をAIで提供することを想定している。  
+移民が増えることでの言語的な障壁、高齢化による人手不足やデジタル化が進まないこと等によるサービス提供上の課題を解消することを目指している。  
+また、窓口業務を各役割のAIに分担した上でタスク内容を抽象的に定義し、それらを協調動作させることで、業務の最低限の定義でもサービスを提供できるようにすることを目指している。  
 
 ## 主な特徴
 - ユーザーとの会話を通して、ユーザーの要望を汲み取り、それに合わせて窓口業務を行う。
@@ -18,28 +18,27 @@
 graph TD
     User[User] --> |Interacts with| Interface[Service Counter Interface]
     Interface --> |Sends message| Counter[Counter]
-    Counter --> |Analyzes situation| Counter
     Counter --> |Delegates if needed| Broker[Broker]
     Counter --> |Delegates if needed| DocReviewer[Document Reviewer]
     Interface --> |Checks interaction status| Observer[Observer]
     
     subgraph Service Counter
         Counter --> |Responds to user| Interface
-        Broker --> |Provides document details| Counter
-        DocReviewer --> |Reviews & processes documents| Counter
-        Observer --> |Determines if interaction continues| Interface
+        Broker --> |Judge what type of task | Counter
+        DocReviewer --> |Reviews & approve documents| Counter
+        Observer --> |Determines if interaction continues| Counter
         PerfReviewer[Performance Reviewer] --> |Evaluates overall service| Interface
     end
-    
+
     Interface --> |Returns results| User
 
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style Interface fill:#bbf,stroke:#333,stroke-width:2px
-    style Counter fill:#bfb,stroke:#333,stroke-width:2px
-    style Broker fill:#bfb,stroke:#333,stroke-width:2px 
-    style DocReviewer fill:#bfb,stroke:#333,stroke-width:2px
-    style Observer fill:#bfb,stroke:#333,stroke-width:2px
-    style PerfReviewer fill:#bfb,stroke:#333,stroke-width:2px
+    style User fill:#f4f,stroke:#333,stroke-width:2px
+    style Interface fill:#ac,stroke:#333,stroke-width:2px
+    style Counter fill:#aafb,stroke:#333,stroke-width:2px
+    style Broker fill:#aafb,stroke:#333,stroke-width:2px 
+    style DocReviewer fill:#aafb,stroke:#333,stroke-width:2px
+    style Observer fill:#aafb,stroke:#333,stroke-width:2px
+    style PerfReviewer fill:#aafb,stroke:#333,stroke-width:2px
 
 ```
 
@@ -51,7 +50,7 @@ pyenv local 3.11.0b4
 pip install -r requirements.txt
 export OPENAI_API_KEY=your_api_key
 ```
-現バージョンでは、OpenAI APIのみ利用可能。  
+現バージョンでは、OpenAI APIのみ利用可能。Vision APIを利用している。  
 窓口業務の定義は、`conf/job_description.json`と`conf/task_details.json`で行う。  
 
 まずは、`conf/job_description.json`を編集して、サービスの内容を定義する。
@@ -100,9 +99,9 @@ export OPENAI_API_KEY=your_api_key
 
 ```
 
-次に、`conf/task_details.json`を編集して、各AI役割者が行うタスクの詳細を定義する。
-例では、転入届と転出届の2つの申請処理を定義している。
-定義されたタスクごとの正解画像を用意する必要があり、これをユーザーの提出書類と比較している。
+次に、`conf/task_details.json`を編集して、各AI役割者が行うタスクの詳細を定義する。  
+例では、転入届と転出届の2つの申請処理を定義している。  
+定義されたタスクごとの正解画像を用意する必要があり、これをユーザーの提出書類と比較している。  
 ```
 {
     "tasks": [
