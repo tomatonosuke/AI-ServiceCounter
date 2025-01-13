@@ -49,7 +49,9 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
     script_history = []
     msg_history = []
     all_task_number = [task["task_number"] for task in task_details["tasks"]]
+    # correct image path format
     correct_img_path_format = "conf/correct_img/{task_number}.png"
+    # create instances
     counter = Counter(job_description=job_description)
     observer = Observer(job_description=job_description,
                         task_details=task_details)
@@ -69,11 +71,12 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
         # If user input is available, send it to LLM
         if app.user_input_flag:
             user_message = app.user_message
-
+            # get image base64
             image_base64 = [] if app.for_llm_image_b64 is None else [app.for_llm_image_b64]
             # analyze situation
             extracted_json, msg_history, script_history = counter.analyze_situation(
                 text=user_message, client=client, model=model,  msg_history=msg_history, script_history=script_history)
+            # if need help collegue, delegate task
             if extracted_json["need_help_collegue"] != "":
                 if extracted_json["need_help_collegue"] == "broker":
                     extracted_json, msg_history, script_history = broker.identify_task(
@@ -84,7 +87,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                         else:
                             add_invalid_value_log_to_script(
                                 speaker_role="broker", attribute_name="task_number", script_history=script_history)
-
+            # if need help reviewer, review document
                 elif extracted_json["need_help_collegue"] == "reviewer":
                     if task_number is not None:
                         correct_img_path = correct_img_path_format.format(
@@ -119,7 +122,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                     app.update()
                     time.sleep(10)
 
-            except Exception as e:
+            except Exception:
                 add_invalid_value_log_to_script(
                     speaker_role="observer", attribute_name="is_need_of_continuation_of_interaction", script_history=script_history)
             app.set_input_in_progress(False)

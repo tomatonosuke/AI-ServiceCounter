@@ -134,3 +134,8 @@ export OPENAI_API_KEY=your_api_key
 ```
 python launch_servicecounter.py --job_path "conf/job_description.json" --task_path "conf/task_details.json" --model "gpt-4o-2024-08-06" --result_path "performance_result/result.json" --script_history_dir "performance_result"
 ```
+- task_path: task_details.jsonの格納先
+- job_path: job_description.jsonの格納先
+- model: 使用するモデル(Vision APIが使えるOpenAIモデルのみ)
+- result_path: result.json(reviewerの評価)の格納先ディレクトリ
+- script_history_dir: 会話ログの格納先ディレクトリ
