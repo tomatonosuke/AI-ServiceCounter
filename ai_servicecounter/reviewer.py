@@ -37,8 +37,8 @@ class Reviewer(Worker):
         """
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg=review_correctness_prompt,
-            image_paths=[],
-            image_base64_values=[correct_img_path],
+            image_paths=[correct_img_path],
+            image_base64_values=[],
             model=model,
             client=client,
             system_message=self.system_message,
@@ -64,7 +64,7 @@ class Reviewer(Worker):
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg=second_message,
             image_paths=[],
-            image_base64_values=[encode_image(review_img_base64)],
+            image_base64_values=[review_img_base64],
             model=model,
             client=client,
             system_message=self.system_message,
