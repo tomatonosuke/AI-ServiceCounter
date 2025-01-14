@@ -94,6 +94,7 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                             task_number=task_number)
                         extracted_json, msg_history, script_history = reviewer.review_correctness_with_img(
                             client=client, model=model, review_img_base64=image_base64[0], correct_img_path=correct_img_path, msg_history=msg_history, script_history=script_history)
+                        app.for_llm_image_b64 = None
                     else:
                         add_invalid_value_log_to_script(
                             speaker_role="counter", attribute_name="task_number", script_history=script_history)
@@ -117,10 +118,11 @@ def main(job_description_path: str, task_details_path: str, model: str, result_p
                 if is_need_of_continuation_of_interaction == 0:
                     app.add_chat(
                         "System", "Completed. This chat will be closed after 10 seconds.")
-                    running = False
+
                     app.update_idletasks()
                     app.update()
                     time.sleep(10)
+                    running = False
 
             except Exception:
                 add_invalid_value_log_to_script(
