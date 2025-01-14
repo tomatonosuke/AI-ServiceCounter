@@ -20,7 +20,7 @@ class Reviewer(Worker):
     def review_correctness_with_img(self, correct_img_path: str, review_img_base64: str, model: str, client: str, msg_history: str = None, script_history: List[str] = None, task_list: List[str] = None) -> Dict[str, str]:
         review_correctness_prompt = """
         今から画像を２つ提出します。
-        最初の画像が提出されたデータで、2つ目の画像が正解データです。
+        最初の画像が正解データで、2つ目の画像が提出されたデータです。
         2つの画像データを比較し、提出されたデータの正確性を判断してください。
         次のレスポンスは、以下レスポンスフォーマットに従って出力してください。
         今の会話はレスポンス不要です。
@@ -38,7 +38,7 @@ class Reviewer(Worker):
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg=review_correctness_prompt,
             image_paths=[],
-            image_base64_values=[review_img_base64],
+            image_base64_values=[correct_img_path],
             model=model,
             client=client,
             system_message=self.system_message,
@@ -64,7 +64,7 @@ class Reviewer(Worker):
         resp, msg_histories, script_histories = get_response_and_scripts_with_img_from_llm(
             msg=second_message,
             image_paths=[],
-            image_base64_values=[encode_image(correct_img_path)],
+            image_base64_values=[encode_image(review_img_base64)],
             model=model,
             client=client,
             system_message=self.system_message,
