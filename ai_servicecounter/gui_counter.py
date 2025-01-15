@@ -9,9 +9,9 @@ from PIL import Image, ImageTk
 
 class ChatGUI(tk.Tk):
     """
-    tkinter を使ったチャット風の GUI アプリ。
-    「メッセージ送信」時のコールバックをメインルーチンから受け取り、
-    結果を表示する。
+    A chat-style GUI application using tkinter.
+    Receives callbacks from the main routine when "sending messages"
+    and displays the results.
     """
 
     def __init__(self):
@@ -19,22 +19,22 @@ class ChatGUI(tk.Tk):
         self.title("Chat GUI")
         self.geometry("800x600")
 
-        # ---------- スタイル設定 ----------
+        # ---------- Style Settings ----------
         self.style = ttk.Style()
-        # システムにあるテーマを指定 (clam, default, alt, etc.)
+        # Specify a system theme (clam, default, alt, etc.)
         self.style.theme_use("clam")
 
-        # 背景色やボタンなどのスタイルを設定
+        # Set styles for background color, buttons etc.
         background_color = "#fafafa"
         accent_color = "#1a73e8"
         text_color = "#333333"
-        # 好みのフォントに変更可 (例: "Century Gothic", "Arial")
+        # Font can be changed to preference (e.g. "Century Gothic", "Arial")
         font_family = "Helvetica"
 
-        # フレームの背景色
+        # Frame background color
         self.style.configure("TFrame", background=background_color)
 
-        # ラベルのデザイン
+        # Label design
         self.style.configure(
             "TLabel",
             background=background_color,
@@ -42,7 +42,7 @@ class ChatGUI(tk.Tk):
             font=(font_family, 11)
         )
 
-        # ボタンのデザイン
+        # Button design
         self.style.configure(
             "TButton",
             background=accent_color,
@@ -51,17 +51,17 @@ class ChatGUI(tk.Tk):
             padding=6
         )
 
-        # エントリーのデザイン
+        # Entry design
         self.style.configure(
             "TEntry",
             font=(font_family, 11),
             padding=5
         )
 
-        # ウィンドウ全体の背景色を設定
+        # Set background color for entire window
         self.configure(bg=background_color)
 
-        # ---------- 上部：チャット表示部 ----------
+        # ---------- Top: Chat Display Area ----------
         self.chat_display = scrolledtext.ScrolledText(
             self,
             wrap=tk.WORD,
@@ -75,8 +75,7 @@ class ChatGUI(tk.Tk):
         )
         self.chat_display.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.chat_display.config(state="disabled")
-
-        # ---------- 下部：メッセージ入力＆プレビュー ----------
+        # ---------- Bottom: Message Input & Preview Area ----------
         bottom_frame = ttk.Frame(self, style="TFrame")
         bottom_frame.pack(fill=tk.X, padx=10, pady=10)
 
@@ -84,7 +83,7 @@ class ChatGUI(tk.Tk):
         self.entry_message.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self.entry_message.bind("<Return>", self.on_enter_key)
 
-        # 初期状態で画像ボタンを無効化
+        # Disable image button initially
         self.button_attach = ttk.Button(
             bottom_frame, text="attach image", command=self.select_image, state=tk.DISABLED)
         self.button_attach.pack(side=tk.LEFT, padx=5)
@@ -93,7 +92,7 @@ class ChatGUI(tk.Tk):
             bottom_frame, text="send", command=self.send_message)
         self.button_send.pack(side=tk.LEFT, padx=5)
 
-        # プレビュー用フレーム
+        # Preview frame
         preview_frame = ttk.Frame(self, style="TFrame")
         preview_frame.pack(fill=tk.X, padx=10, pady=5)
 
@@ -106,21 +105,21 @@ class ChatGUI(tk.Tk):
         self.button_cancel_selection.pack(side=tk.LEFT, padx=5)
         self.button_cancel_selection.config(state=tk.DISABLED)
 
-        # --- フラグ＆データ ---
+        # --- Flags & Data ---
         self.user_input_flag = False
         self.user_message = None
 
-        # base64 を保持するための変数
+        # Variable to store base64 data
         self.user_image_b64 = None
 
-        # 表示用のサムネイルオブジェクト
+        # Thumbnail object for display
         self.selected_image_thumbnail = None
         self.thumbnail_refs = []
 
-        # 画像送信が可能かどうかのフラグ
+        # Flag to check if image sending is allowed
         self.can_send_images = False
 
-        # ユーザーが送信した画像を保持するための変数
+        # Variable to store user submitted image
         self.for_llm_image_b64 = None
 
     def on_enter_key(self, event):
@@ -129,15 +128,15 @@ class ChatGUI(tk.Tk):
 
     def enable_image_sending(self):
         """
-        何らかの条件が満たされ、画像送信を許可する。
+        Allow image sending when some condition is met.
         """
         self.can_send_images = True
         self.button_attach.config(state=tk.NORMAL)
 
     def select_image(self):
         """
-        画像を選択する処理。
-        実際にはファイルパスを使わず、base64化したバイナリを保持する。
+        Process to select an image.
+        In practice, the file path is not used, but the binary is stored in base64.
         """
         if not self.can_send_images:
             self.add_chat("System", "image sending is not allowed yet.")
@@ -147,22 +146,22 @@ class ChatGUI(tk.Tk):
             filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp")]
         )
         if file_path:
-            # ★ ファイルを開いてバイナリを読み込み & base64化
+            # Read the file and encode it in base64
             with open(file_path, "rb") as f:
                 raw_data = f.read()
                 self.user_image_b64 = base64.b64encode(
                     raw_data).decode("utf-8")
 
-            # 選択された画像をプレビュー表示 (base64→PIL→PhotoImage化)
+            # Display the selected image (base64→PIL→PhotoImage)
             self.update_image_preview(self.user_image_b64)
             self.button_cancel_selection.config(state=tk.NORMAL)
 
     def update_image_preview(self, image_b64: str):
         """
-        base64文字列から画像を生成し、プレビューラベルに表示する。
+        Generate an image from a base64 string and display it in the preview label.
         """
         try:
-            # base64文字列をデコード → BytesIO に載せて Pillowで開く
+            # Decode the base64 string and load it into a BytesIO object with Pillow
             decoded_data = base64.b64decode(image_b64)
             img_io = io.BytesIO(decoded_data)
             img = Image.open(img_io)
@@ -177,7 +176,7 @@ class ChatGUI(tk.Tk):
 
     def cancel_preview(self):
         """
-        選択を解除し、プレビューを消す。
+        Reset the selection and remove the preview.
         """
         self.selected_image_thumbnail = None
         self.label_image_preview.configure(text="", image="")
@@ -185,7 +184,7 @@ class ChatGUI(tk.Tk):
 
     def cancel_selection(self):
         """
-        選択を解除し、プレビューを消す。
+        Reset the selection and remove the preview.
         """
         self.user_image_b64 = None
         self.selected_image_thumbnail = None
@@ -194,30 +193,30 @@ class ChatGUI(tk.Tk):
 
     def send_message(self):
         """
-        送信ボタンが押されたときに発火。
+        Triggered when the send button is pressed.
         """
         if self.user_input_flag:
             return
 
         user_message = self.entry_message.get().strip()
-        # 画像があるかどうかは user_image_b64 を見る
+        # Check if there is an image by looking at user_image_b64
         if not user_message and not self.user_image_b64:
             return
 
-        # チャット画面にユーザーの発言を表示
+        # Display the user's message in the chat window
         self.add_chat("User", user_message, image_b64=self.user_image_b64)
 
-        # 入力内容をクラス変数にセット
+        # Set the input content to a class variable
         self.user_message = user_message
 
-        # フラグを立てて送信ボタンを無効化
+        # Set the flag to disable the send button
         self.add_chat("System", text="Thinking...")
         self.set_input_in_progress(True)
 
-        # 入力欄リセット
+        # Reset the input field
         self.entry_message.delete(0, tk.END)
 
-        # 画像もリセット
+        # Reset the image
         self.cancel_preview()
 
         self.for_llm_image_b64 = self.user_image_b64
@@ -232,8 +231,8 @@ class ChatGUI(tk.Tk):
 
     def add_chat(self, speaker: str, text: str, image_b64: str = None):
         """
-        チャットログ領域にメッセージを追加。
-        image_b64 があればサムネイルを表示。
+        Add a message to the chat log area.
+        If image_b64 is present, display the thumbnail.
         """
         self.chat_display.config(state='normal')
         self.chat_display.insert(tk.END, f"{speaker}: {text}\n\n")
@@ -249,7 +248,8 @@ class ChatGUI(tk.Tk):
                 self.thumbnail_refs.append(photo)
                 self.chat_display.image_create(tk.END, image=photo)
             except Exception as e:
-                self.chat_display.insert(tk.END, f"\n[画像の読み込み失敗: {e}]\n")
+                self.chat_display.insert(
+                    tk.END, f"\n[Image loading failed: {e}]\n")
 
         self.chat_display.config(state='disabled')
         self.chat_display.see(tk.END)

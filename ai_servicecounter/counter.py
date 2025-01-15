@@ -18,6 +18,10 @@ base_prompt = """
 
 
 class Counter(Worker):
+    """
+    Counter class for analyzing the situation and responding to the user.
+    """
+
     def __init__(self, job_description: Dict[str, str], max_attempts: int = 10, base_prompt: str = base_prompt):
         self.max_attempts = max_attempts
         self.current_attempt = 0

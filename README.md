@@ -32,14 +32,13 @@ graph TD
 
     Interface --> |Returns results| User
 
-    style User fill:#f4f,stroke:#333,stroke-width:2px
-    style Interface fill:#ac,stroke:#333,stroke-width:2px
-    style Counter fill:#aafb,stroke:#333,stroke-width:2px
-    style Broker fill:#aafb,stroke:#333,stroke-width:2px 
-    style DocReviewer fill:#aafb,stroke:#333,stroke-width:2px
-    style Observer fill:#aafb,stroke:#333,stroke-width:2px
-    style PerfReviewer fill:#aafb,stroke:#333,stroke-width:2px
-
+    style User fill:#f4f,stroke:#333,stroke-width:2px,font-weight:bold,font-size:24px
+    style Interface fill:#ac,stroke:#333,stroke-width:2px,font-weight:bold,font-size:24px
+    style Counter fill:#aafb,stroke:#333,stroke-width:2px,font-weight:bold,font-size:18px
+    style Broker fill:#aafb,stroke:#333,stroke-width:2px,font-weight:bold,font-size:18px
+    style DocReviewer fill:#aafb,stroke:#333,stroke-width:2px,font-weight:bold,font-size:18px
+    style Observer fill:#aafb,stroke:#333,stroke-width:2px,font-weight:bold,font-size:18px
+    style PerfReviewer fill:#aafb,stroke:#333,stroke-width:2px,font-weight:bold,font-size:18px
 ```
 
 ## Usage

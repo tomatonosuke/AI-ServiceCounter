@@ -11,6 +11,10 @@ base_prompt = """
 
 
 class Reviewer(Worker):
+    """
+    Reviewer class for reviewing the correctness of the conversation and scoring it.
+    """
+
     def __init__(self, job_description: Dict[str, str], base_prompt: str = base_prompt):
         self.job_description = job_description
         self.system_message = base_prompt.format(
